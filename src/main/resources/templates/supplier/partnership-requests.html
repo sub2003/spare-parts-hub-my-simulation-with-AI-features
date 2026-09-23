@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Partnership Requests', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Supplier Onboarding</div>
+            <h1 class="page-title">Partnership Requests</h1>
+            <p class="page-subtitle mb-0">Review prospective supplier information and record an approval or rejection decision.</p>
+        </div>
+        <div class="search-box no-print">
+            <input class="form-control" type="search" placeholder="Search requests..." data-table-search="partnershipTable" aria-label="Search partnership requests"/>
+        </div>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('partnerships')}"></th:block>
+
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(requests)}">
+            <table class="table table-modern" id="partnershipTable">
+                <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Contact Person</th>
+                    <th>Email</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th class="text-end no-print">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${requests}" data-search-row>
+                    <td>
+                        <div class="fw-bold" th:text="${request.companyName}">Company</div>
+                        <div class="text-muted small mt-1" th:if="${request.supplier != null}">Portal account: <span th:text="${request.supplier.supplierCode}">SUP001</span></div>
+                        <div th:if="${request.catalogFilePath != null and !#strings.isEmpty(request.catalogFilePath)}" class="mt-2">
+                            <a class="btn btn-sm btn-outline-primary" th:href="@{/supplier/partnerships/{id}/catalog(id=${request.requestId})}">Download Catalog</a>
+                        </div>
+                    </td>
+                    <td th:text="${request.contactPerson}">Contact Person</td>
+                    <td><a th:href="${'mailto:' + request.email}" th:text="${request.email}">email@example.com</a></td>
+                    <td class="small text-muted" th:text="${request.submittedAt != null ? request.submittedAt : '—'}">—</td>
+                    <td><span th:class="${'status-pill status-' + request.status}" th:text="${request.status}">pending</span></td>
+                    <td class="text-end no-print">
+                        <div th:if="${request.status.name() == 'pending'}"
+                             class="d-flex flex-wrap justify-content-end gap-2">
+                            <form th:if="${request.catalogFilePath != null and !#strings.isEmpty(request.catalogFilePath)}"
+                                  th:action="@{/supplier/partnerships/{id}/catalog/delete(id=${request.requestId})}"
+                                  method="post"
+                                  data-confirm="Remove the uploaded catalogue from this pending request?">
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">Remove Catalogue</button>
+                            </form>
+                            <form th:action="@{/supplier/partnerships/{id}/withdraw(id=${request.requestId})}"
+                                  method="post"
+                                  data-confirm="Withdraw this pending partnership request? The request and its uploaded catalogue will be removed.">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Withdraw</button>
+                            </form>
+                            <form th:action="@{/supplier/partnerships/{id}/decision(id=${request.requestId})}" method="post"
+                                  data-confirm="Approve this partnership request? This records the decision but does not create a portal password.">
+                                <input type="hidden" name="decision" value="approved"/>
+                                <button class="btn btn-sm btn-outline-success" type="submit">Approve</button>
+                            </form>
+                            <form th:action="@{/supplier/partnerships/{id}/decision(id=${request.requestId})}" method="post"
+                                  data-confirm="Reject this partnership request?">
+                                <input type="hidden" name="decision" value="rejected"/>
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                            </form>
+                        </div>
+                        <div th:unless="${request.status.name() == 'pending'}" class="d-flex justify-content-end align-items-center gap-2">
+                            <a th:if="${request.status.name() == 'approved' and request.supplier != null}"
+                               class="btn btn-sm btn-primary"
+                               th:href="@{/supplier/records/{id}/products(id=${request.supplier.supplierId})}">Manage Products</a>
+                            <span class="text-muted small">Decision recorded</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(requests)}">
+            <div class="empty-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 11 3 6l3-3 5 5M16 11l5-5-3-3-5 5"/><path d="m8 11 3 3a2 2 0 0 0 3 0l2-2"/></svg></div>
+            <h3 class="h6 text-dark">No partnership requests awaiting review</h3>
+            <p class="mb-0">Supplier submissions will appear here when received.</p>
+        </div>
+    </div>
+
+    <div class="info-box mt-3">Approval records the partnership decision only. Secure supplier portal account creation remains separate.</div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

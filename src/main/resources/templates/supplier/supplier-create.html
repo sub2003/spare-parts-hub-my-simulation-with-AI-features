@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Add Supplier', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Supplier Management</div>
+            <h1 class="page-title">Add Supplier</h1>
+            <p class="page-subtitle mb-0">Create a supplier account and grant access to the dedicated Supplier Portal.</p>
+        </div>
+        <a class="btn btn-outline-primary header-action no-print" th:href="@{/supplier/records}">Back to Suppliers</a>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('suppliers')}"></th:block>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <div class="panel-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h2 class="h5 fw-bold mb-1">Create Supplier Account</h2>
+                        <p class="text-muted small mb-0">The temporary password is BCrypt-hashed before it is stored and is never shown in Supplier Management.</p>
+                    </div>
+                    <span class="status-pill status-approved">Admin Only</span>
+                </div>
+
+                <form th:action="@{/supplier/records}" method="post" th:object="${form}">
+                    <section class="form-section pt-2">
+                        <div class="mb-3">
+                            <div class="page-kicker">Supplier Identity</div>
+                            <p class="text-muted small mb-0">Use the same supplier-code style as the existing records, for example SUP001.</p>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label" for="supplierCode">Supplier Code <span class="text-danger">*</span></label>
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors('supplierCode')} ? ' is-invalid' : ''"
+                                       id="supplierCode"
+                                       th:field="*{supplierCode}"
+                                       maxlength="20"
+                                       autocomplete="off"
+                                       placeholder="e.g. SUP004"
+                                       required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('supplierCode')}" th:errors="*{supplierCode}"></div>
+                                <div class="form-text">2–20 letters, numbers, dashes or underscores. Codes are normalized to uppercase.</div>
+                            </div>
+
+                            <div class="col-md-7">
+                                <label class="form-label" for="name">Supplier Name <span class="text-danger">*</span></label>
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors('name')} ? ' is-invalid' : ''"
+                                       id="name"
+                                       th:field="*{name}"
+                                       maxlength="50"
+                                       autocomplete="organization"
+                                       placeholder="Company or supplier name"
+                                       required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <div class="mb-3">
+                            <div class="page-kicker">Contact Information</div>
+                            <p class="text-muted small mb-0">The email address becomes the supplier's Supplier Portal username.</p>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="email">Email Address <span class="text-danger">*</span></label>
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors('email')} ? ' is-invalid' : ''"
+                                       id="email"
+                                       th:field="*{email}"
+                                       type="email"
+                                       maxlength="254"
+                                       autocomplete="email"
+                                       placeholder="supplier@example.com"
+                                       required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="contact">Contact Number <span class="text-danger">*</span></label>
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors('contact')} ? ' is-invalid' : ''"
+                                       id="contact"
+                                       th:field="*{contact}"
+                                       maxlength="20"
+                                       autocomplete="tel"
+                                       placeholder="e.g. 077 123 4567"
+                                       required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('contact')}" th:errors="*{contact}"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <div class="mb-3">
+                            <div class="page-kicker">Supplier Portal Access</div>
+                            <p class="text-muted small mb-0">Give the temporary password directly to the supplier. It is not stored in plain text.</p>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="temporaryPassword">Temporary Password <span class="text-danger">*</span></label>
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors('temporaryPassword')} ? ' is-invalid' : ''"
+                                       id="temporaryPassword"
+                                       name="temporaryPassword"
+                                       type="password"
+                                       minlength="8"
+                                       autocomplete="new-password"
+                                       required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('temporaryPassword')}" th:errors="*{temporaryPassword}"></div>
+                                <div class="form-text">Minimum 8 characters.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="confirmPassword">Confirm Password <span class="text-danger">*</span></label>
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors('confirmPassword')} ? ' is-invalid' : ''"
+                                       id="confirmPassword"
+                                       name="confirmPassword"
+                                       type="password"
+                                       minlength="8"
+                                       autocomplete="new-password"
+                                       required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="active">Account Status</label>
+                                <select class="form-select" id="active" th:field="*{active}">
+                                    <option th:value="true">Active — supplier can sign in immediately</option>
+                                    <option th:value="false">Inactive — portal sign-in is blocked</option>
+                                </select>
+                                <div class="form-text">You can activate or deactivate the supplier later from Supplier Records.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="info-box mt-3">
+                        Creating this account does not automatically create a partnership request or supplier-product terms. Those workflows remain separate.
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 no-print">
+                        <a class="btn btn-light border" th:href="@{/supplier/records}">Cancel</a>
+                        <button class="btn btn-primary" type="submit">Create Supplier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

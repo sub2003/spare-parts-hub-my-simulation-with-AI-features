@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='RMA Details', content=~{::main})}">
+<body>
+<main class="page-wrap module-warranty">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Warranty / RMA • Claim Details</div>
+            <h1 class="page-title" th:text="${claim.claimCode}">RMA-000001</h1>
+            <p class="page-subtitle">
+                <span th:text="${claim.serial.product.name}">Product</span>
+                • Serial <strong th:text="${claim.serial.serialValue}">SERIAL</strong>
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-primary" th:href="@{/warranty(serial=${claim.serial.serialValue})}">Serial Lookup</a>
+            <a class="btn btn-outline-secondary" th:href="@{/warranty}">All RMAs</a>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="detail-card mb-4">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Claim Summary</h2>
+                <p class="section-subtitle">The claim workflow state is separate from the selected resolution.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="status"
+                      th:classappend="${claim.claimStatus.name() == 'pending'} ? ' status-amber' : (${claim.claimStatus.name() == 'approved'} ? ' status-blue' : (${claim.claimStatus.name() == 'rejected'} ? ' status-red' : ' status-green'))"
+                      th:text="${#strings.replace(claim.claimStatus.name(),'_',' ')}">pending</span>
+                <span class="status"
+                      th:classappend="${claim.resolution.name() == 'pending'} ? ' status-amber' : ' status-green'"
+                      th:text="${#strings.replace(claim.resolution.name(),'_',' ')}">pending</span>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Product</div>
+                <div class="detail-value" th:text="${claim.serial.product.name}">Product</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Product Code</div>
+                <div class="detail-value" th:text="${claim.serial.product.productCode}">CODE</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Original Serial</div>
+                <div class="detail-value" th:text="${claim.serial.serialValue}">SERIAL</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Original Serial Status</div>
+                <div class="detail-value text-capitalize" th:text="${#strings.replace(claim.serial.currentStatus.name(),'_',' ')}">defective</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Original Sale</div>
+                <div class="detail-value" th:text="${claim.serial.sale != null ? claim.serial.sale.saleCode : 'Not linked'}">SALE</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Sold At</div>
+                <div class="detail-value" th:text="${claim.serial.sale != null and claim.serial.sale.soldAt != null ? #temporals.format(claim.serial.sale.soldAt,'yyyy-MM-dd HH:mm') : 'N/A'}">date</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Warranty Period</div>
+                <div class="detail-value" th:text="${claim.serial.product.warrantyPeriodMonths != null ? claim.serial.product.warrantyPeriodMonths + ' months' : 'Not configured'}">36 months</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Warranty Expiry</div>
+                <div class="detail-value"
+                     th:text="${warrantyExpiry != null ? warrantyExpiry : 'N/A'}">date</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Opened By</div>
+                <div class="detail-value" th:text="${claim.processedBy.name}">Staff</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Opened At</div>
+                <div class="detail-value" th:text="${claim.createdAt != null ? #temporals.format(claim.createdAt,'yyyy-MM-dd HH:mm') : claim.claimDate}">date</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Reviewed By</div>
+                <div class="detail-value" th:text="${claim.reviewedBy != null ? claim.reviewedBy.name : 'Not reviewed'}">Not reviewed</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Reviewed At</div>
+                <div class="detail-value" th:text="${claim.reviewedAt != null ? #temporals.format(claim.reviewedAt,'yyyy-MM-dd HH:mm') : 'N/A'}">N/A</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Resolved By</div>
+                <div class="detail-value" th:text="${claim.resolvedBy != null ? claim.resolvedBy.name : 'Not resolved'}">Not resolved</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Closed At</div>
+                <div class="detail-value" th:text="${claim.closedAt != null ? #temporals.format(claim.closedAt,'yyyy-MM-dd HH:mm') : 'Open'}">Open</div>
+            </div>
+            <div class="detail-item" th:if="${claim.replacementSerial != null}">
+                <div class="detail-label">Replacement Serial</div>
+                <div class="detail-value" th:text="${claim.replacementSerial.serialValue}">REPLACEMENT</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="detail-card mb-4">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Reported Fault</h2>
+                <p class="section-subtitle">Information recorded when the RMA was opened.</p>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="detail-item h-100">
+                    <div class="detail-label">Fault Description</div>
+                    <div class="detail-value" style="white-space:pre-wrap" th:text="${claim.faultDescription}">Fault</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="detail-item h-100">
+                    <div class="detail-label">Physical Condition / Notes</div>
+                    <div class="detail-value" style="white-space:pre-wrap" th:text="${claim.conditionNotes != null ? claim.conditionNotes : 'No condition notes'}">Notes</div>
+                </div>
+            </div>
+            <div class="col-lg-6" th:if="${claim.rejectionReason != null}">
+                <div class="detail-item h-100">
+                    <div class="detail-label">Rejection Reason</div>
+                    <div class="detail-value" style="white-space:pre-wrap" th:text="${claim.rejectionReason}">Reason</div>
+                </div>
+            </div>
+            <div class="col-lg-6" th:if="${claim.resolutionNotes != null}">
+                <div class="detail-item h-100">
+                    <div class="detail-label">Resolution Notes</div>
+                    <div class="detail-value" style="white-space:pre-wrap" th:text="${claim.resolutionNotes}">Resolution notes</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section th:if="${claim.claimStatus.name() == 'pending'}" class="form-card mb-4" style="max-width:none">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Review Claim</h2>
+                <p class="section-subtitle">Approval does not change stock. A final replacement/refund/manufacturer resolution is chosen afterward.</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <form method="post" th:action="@{/warranty/rmas/{id}/approve(id=${claim.claimId})}">
+                    <button class="btn btn-primary w-100" type="submit">Approve RMA</button>
+                </form>
+            </div>
+            <div class="col-lg-8">
+                <form method="post" th:action="@{/warranty/rmas/{id}/reject(id=${claim.claimId})}">
+                    <label class="form-label" for="rejectionReason">Rejection Reason</label>
+                    <div class="d-flex gap-2 flex-column flex-md-row">
+                        <textarea id="rejectionReason" class="form-control" name="rejectionReason" maxlength="255" required placeholder="Why is this claim being rejected?"></textarea>
+                        <button class="btn btn-outline-danger align-self-md-end" type="submit">Reject RMA</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section th:if="${claim.claimStatus.name() == 'approved' and claim.resolution.name() == 'pending'}" class="mb-4">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Choose Final Resolution</h2>
+                <p class="section-subtitle">Each final action requires an explicit confirmation. Only replacement consumes sellable inventory.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-4">
+                <div class="form-card h-100">
+                    <h3 class="section-title">Replace Unit</h3>
+                    <p class="section-subtitle mb-3">Select the exact physical replacement serial. It must be the same product, in stock, unsold and unused by another RMA.</p>
+
+                    <div th:if="${#lists.isEmpty(replacementOptions)}" class="alert alert-warning">
+                        No valid replacement serials are currently available for this product.
+                    </div>
+
+                    <form th:unless="${#lists.isEmpty(replacementOptions)}" method="post" th:action="@{/warranty/rmas/{id}/replace(id=${claim.claimId})}">
+                        <div class="mb-3">
+                            <label class="form-label" for="replacementSerialId">Replacement Serial</label>
+                            <select id="replacementSerialId" class="form-select" name="replacementSerialId" required>
+                                <option value="">Select serial</option>
+                                <option th:each="s : ${replacementOptions}" th:value="${s.serialId}" th:text="${s.serialValue}">SERIAL</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="replacementNotes">Resolution Notes</label>
+                            <textarea id="replacementNotes" class="form-control" name="resolutionNotes" maxlength="500" placeholder="Optional replacement notes"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" value="true" name="confirm" id="confirmReplacement" required/>
+                            <label class="form-check-label" for="confirmReplacement">I confirm this exact serial will be issued as the replacement.</label>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Complete Replacement</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="form-card h-100">
+                    <h3 class="section-title">Record Refund</h3>
+                    <p class="section-subtitle mb-3">This records the RMA outcome only. It does not simulate a payment gateway and does not silently add stock back.</p>
+                    <form method="post" th:action="@{/warranty/rmas/{id}/refund(id=${claim.claimId})}">
+                        <div class="mb-3">
+                            <label class="form-label" for="refundNotes">Refund Notes</label>
+                            <textarea id="refundNotes" class="form-control" name="resolutionNotes" maxlength="500" placeholder="Refund/reference notes"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" value="true" name="confirm" id="confirmRefund" required/>
+                            <label class="form-check-label" for="confirmRefund">I confirm this claim should be finalized as refunded.</label>
+                        </div>
+                        <button class="btn btn-outline-primary w-100" type="submit">Finalize Refund</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="form-card h-100">
+                    <h3 class="section-title">Send to Manufacturer</h3>
+                    <p class="section-subtitle mb-3">The original serial moves to the existing non-sellable returned state and the manufacturer outcome is recorded.</p>
+                    <form method="post" th:action="@{/warranty/rmas/{id}/manufacturer(id=${claim.claimId})}">
+                        <div class="mb-3">
+                            <label class="form-label" for="manufacturerNotes">Manufacturer Notes</label>
+                            <textarea id="manufacturerNotes" class="form-control" name="resolutionNotes" maxlength="500" placeholder="RMA reference, courier or manufacturer notes"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" value="true" name="confirm" id="confirmManufacturer" required/>
+                            <label class="form-check-label" for="confirmManufacturer">I confirm this unit is being sent to the manufacturer.</label>
+                        </div>
+                        <button class="btn btn-outline-primary w-100" type="submit">Finalize Manufacturer Return</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Serial Claim History</h2>
+                <p class="section-subtitle">Chronological warranty history for <strong th:text="${claim.serial.serialValue}">SERIAL</strong>.</p>
+            </div>
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(history)}">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>RMA</th>
+                    <th>Opened</th>
+                    <th>Status</th>
+                    <th>Resolution</th>
+                    <th>Reviewed By</th>
+                    <th>Replacement</th>
+                    <th>Closed</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="h : ${history}">
+                    <td><a th:href="@{/warranty/rmas/{id}(id=${h.claimId})}" th:text="${h.claimCode}">RMA</a></td>
+                    <td th:text="${h.createdAt != null ? #temporals.format(h.createdAt,'yyyy-MM-dd HH:mm') : h.claimDate}">date</td>
+                    <td th:text="${#strings.replace(h.claimStatus.name(),'_',' ')}">status</td>
+                    <td th:text="${#strings.replace(h.resolution.name(),'_',' ')}">resolution</td>
+                    <td th:text="${h.reviewedBy != null ? h.reviewedBy.name : 'N/A'}">N/A</td>
+                    <td th:text="${h.replacementSerial != null ? h.replacementSerial.serialValue : 'N/A'}">N/A</td>
+                    <td th:text="${h.closedAt != null ? #temporals.format(h.closedAt,'yyyy-MM-dd HH:mm') : 'Open'}">Open</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

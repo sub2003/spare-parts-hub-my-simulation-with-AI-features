@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Pick Ticket', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Warehouse Pick Ticket</div>
+            <h1 class="page-title" th:text="${ticket.ticketCode}">PICK-000001</h1>
+            <p class="page-subtitle">Sale <strong th:text="${ticket.sale.saleCode}">SALE-000001</strong><span class="mx-1">•</span><span class="text-capitalize" th:text="${#strings.replace(ticket.status.name(),'_',' ')}">pending</span></p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/inventory/pick-tickets}">Back to Queue</a>
+            <a class="btn btn-outline-primary" target="_blank" th:href="@{/inventory/pick-tickets/{id}/qr(id=${ticket.ticketId})}">Open QR</a>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="detail-card mb-4">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-auto"><img th:src="@{/inventory/pick-tickets/{id}/qr(id=${ticket.ticketId})}" alt="Pick ticket QR code" width="150" height="150" style="border-radius:12px;border:1px solid #e2e8f0;padding:8px;background:#fff"></div>
+            <div class="col">
+                <div class="eyebrow">Ticket Information</div>
+                <h2 class="section-title mt-2" th:text="${ticket.ticketCode}">PICK-000001</h2>
+                <p class="mb-1">Created: <strong th:text="${ticket.createdAt != null ? #temporals.format(ticket.createdAt,'yyyy-MM-dd HH:mm') : '—'}">—</strong></p>
+                <p class="mb-1">Operator: <strong th:text="${ticket.fulfilledBy != null ? ticket.fulfilledBy.name : 'Not processed yet'}">—</strong></p>
+                <p class="mb-0">Processed: <strong th:text="${ticket.fulfilledAt != null ? #temporals.format(ticket.fulfilledAt,'yyyy-MM-dd HH:mm') : '—'}">—</strong></p>
+            </div>
+            <div class="col-md-auto"><span class="status" th:classappend="${ticket.status.name() == 'completed'} ? ' status-green' : (${ticket.status.name() == 'partially_completed'} ? ' status-purple' : (${ticket.status.name() == 'exception'} ? ' status-red' : ' status-amber'))" th:text="${#strings.replace(ticket.status.name(),'_',' ')}">pending</span></div>
+        </div>
+    </section>
+
+    <form th:if="${ticket.status.name() == 'pending'}" method="post" th:action="@{/inventory/pick-tickets/{id}/complete(id=${ticket.ticketId})}">
+        <section class="table-card">
+            <div class="table-card-header"><div><h2 class="section-title">Items to Pick</h2><p class="section-subtitle">Confirm the actual quantity physically found. Sales already reserved/deducted the requested quantity; a shortfall is returned to inventory automatically.</p></div><span class="status status-amber">Pending</span></div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead><tr><th>Product</th><th>Exact Storage Location</th><th>Serial Assignment</th><th>Requested</th><th style="width:150px">Picked</th></tr></thead>
+                    <tbody>
+                    <tr th:each="row : ${lines}">
+                        <td><div class="fw-bold" th:text="${row.item.product.name}">Product</div><div class="text-muted small" th:text="${row.item.product.productCode}">CODE</div></td>
+                        <td>
+                            <div th:if="${row.item.product.location != null}" class="location-stack">
+                                <span class="location-chip" th:text="${row.item.product.location.locationCode}">A1-S1-B1</span>
+                                <span class="location-chip" th:text="${'Aisle ' + row.item.product.location.aisle}">Aisle</span>
+                                <span class="location-chip" th:text="${'Shelf ' + row.item.product.location.shelf}">Shelf</span>
+                                <span class="location-chip" th:text="${'Bin ' + row.item.product.location.bin}">Bin</span>
+                            </div>
+                            <span th:unless="${row.item.product.location != null}" class="status status-red">Unassigned</span>
+                        </td>
+                        <td>
+                            <div th:if="${row.serialTracked}">
+                                <span class="status status-purple">Serial tracked</span>
+                                <div class="small text-muted mt-2">Assigned to this sale:</div>
+                                <div class="small mt-1" th:each="sn : ${row.assignedSerials}"><span class="code-chip" th:text="${sn.serialValue}">SERIAL</span></div>
+                                <div th:if="${#lists.isEmpty(row.assignedSerials)}" class="small text-danger mt-2">No sale serials assigned</div>
+                                <label class="form-label small mt-3" th:for="${'serials_' + row.item.pickTicketItemId}">Physically picked serial(s)</label>
+                                <textarea class="form-control form-control-sm" rows="3"
+                                          th:id="${'serials_' + row.item.pickTicketItemId}"
+                                          th:name="${'serials_' + row.item.pickTicketItemId}"
+                                          placeholder="One serial per line"></textarea>
+                                <div class="form-text">Enter exactly the serials physically picked. For a partial pick, leave unpicked serials out.</div>
+                            </div>
+                            <span th:unless="${row.serialTracked}" class="text-muted small">Not serial tracked</span>
+                        </td>
+                        <td class="fw-bold" th:text="${row.item.quantity}">1</td>
+                        <td><input class="form-control" type="number" min="0" th:max="${row.item.quantity}" th:name="${'picked_' + row.item.pickTicketItemId}" th:value="${row.item.quantity}" required/></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <div class="d-flex justify-content-end mt-3"><button class="btn btn-primary" type="submit">Confirm Pick Outcome</button></div>
+    </form>
+
+    <section th:unless="${ticket.status.name() == 'pending'}" class="table-card">
+        <div class="table-card-header"><div><h2 class="section-title">Processed Pick Result</h2><p class="section-subtitle">Recorded requested and actual picked quantities.</p></div></div>
+        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product</th><th>Location</th><th>Serials</th><th>Requested</th><th>Picked</th></tr></thead><tbody>
+        <tr th:each="row : ${lines}">
+            <td><div class="fw-bold" th:text="${row.item.product.name}">Product</div><div class="text-muted small" th:text="${row.item.product.productCode}">CODE</div></td>
+            <td><span class="location-chip" th:text="${row.item.product.location != null ? row.item.product.location.locationCode : 'Unassigned'}">Location</span></td>
+            <td><span th:if="${row.serialTracked}" class="small" th:text="${#lists.size(row.assignedSerials) + ' assigned to sale'}">0</span><span th:unless="${row.serialTracked}" class="text-muted small">—</span></td>
+            <td th:text="${row.item.quantity}">1</td><td class="fw-bold" th:text="${row.item.pickedQuantity != null ? row.item.pickedQuantity : 0}">0</td>
+        </tr>
+        </tbody></table></div>
+    </section>
+</main>
+</body>
+</html>

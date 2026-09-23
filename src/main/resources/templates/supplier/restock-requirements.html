@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Restock Requirements', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Procurement Queue</div>
+            <h1 class="page-title">Restock Requirements</h1>
+            <p class="page-subtitle mb-0">Select an approved requirement and compare supplier price, MOQ and lead time.</p>
+        </div>
+        <div class="search-box no-print">
+            <input class="form-control" type="search" placeholder="Search products..." data-table-search="restockTable" aria-label="Search restock requirements"/>
+        </div>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('restock')}"></th:block>
+
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(suggestions)}">
+            <table class="table table-modern" id="restockTable">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Suggested Qty</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th class="text-end no-print">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="suggestion : ${suggestions}" data-search-row>
+                    <td>
+                        <div class="fw-bold" th:text="${suggestion.product.name}">Product</div>
+                        <div class="small text-muted">
+                            <span th:text="${suggestion.product.brand}">Brand</span><span> · </span><span th:text="${suggestion.product.category}">Category</span>
+                        </div>
+                        <span class="code-chip mt-1" th:text="${suggestion.product.productCode != null ? suggestion.product.productCode : 'No product code'}">PRD-001</span>
+                    </td>
+                    <td><strong th:text="${suggestion.product.stockCount}">0</strong> <span class="small text-muted">units</span></td>
+                    <td class="fw-bold" th:text="${suggestion.suggestedQuantity}">10</td>
+                    <td class="small" style="max-width: 290px;" th:text="${suggestion.reason != null ? suggestion.reason : '—'}">—</td>
+                    <td><span th:class="${'status-pill status-' + suggestion.status}" th:text="${suggestion.status}">approved</span></td>
+                    <td class="text-end no-print">
+                        <form class="d-inline-flex gap-2 justify-content-end" th:action="@{/supplier/compare}" method="get">
+                            <input type="hidden" name="suggestionId" th:value="${suggestion.suggestionId}"/>
+                            <input class="form-control form-control-sm" style="width: 88px; min-height: 34px;" type="number" min="1"
+                                   name="quantity" th:value="${suggestion.suggestedQuantity}" aria-label="Required quantity"/>
+                            <button class="btn btn-sm btn-primary text-nowrap" type="submit">Compare Suppliers</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(suggestions)}">
+            <div class="empty-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg></div>
+            <h3 class="h6 text-dark">No approved restock requirements are ready</h3>
+            <p class="mb-0">Approved or modified suggestions will appear here for procurement.</p>
+        </div>
+    </div>
+
+    <div class="info-box mt-3">Supplier comparison excludes MOQ-ineligible terms and recommends the lowest eligible effective total price, with shorter lead time as the tie-breaker.</div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="page(title, content)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title th:text="${title} + ' - Spare Parts Hub'">Spare Parts Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/app-shell.css}"/>
+</head>
+<body>
+<nav class="navbar navbar-expand-xl navbar-light app-navbar" aria-label="Primary navigation">
+    <div class="app-navbar-inner">
+        <a class="navbar-brand" th:href="@{/dashboard}" aria-label="Spare Parts Hub dashboard">
+            <img class="brand-logo"
+                 width="220"
+                 height="45"
+                 th:src="@{/images/spare-parts-hub-logo.svg}"
+                 src="/images/spare-parts-hub-logo.svg"
+                 alt="Spare Parts Hub"/>
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navMenu"
+                aria-controls="navMenu"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav me-auto app-nav-list">
+                <li class="nav-item">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Dashboard'} ? ' active' : ''"
+                       th:href="@{/dashboard}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                        </span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('WAREHOUSE_CLERK','SALES_EXEC','ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Inventory'} ? ' active' : ''"
+                       th:href="@{/inventory}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
+                        </span>
+                        <span>Inventory</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('SALES_EXEC','ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Sales / POS'} ? ' active' : ''"
+                       th:href="@{/sales}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.5h7.8a2 2 0 0 0 1.9-1.4L21 8H7"/></svg>
+                        </span>
+                        <span>Sales / POS</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('INVENTORY_SUPERVISOR','ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Urgency Dashboard'} ? ' active' : ''"
+                       th:href="@{/stockmonitoring}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 14 4-4"/><path d="M6.5 15H4.5M19.5 15h-2M12 8V6"/></svg>
+                        </span>
+                        <span>Urgency</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('SALES_EXEC','INVENTORY_SUPERVISOR','ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Stock Requests'} ? ' active' : ''"
+                       th:href="@{/stockmonitoring/stock-requests}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="M8.5 10.5h7M12 7v7"/></svg>
+                        </span>
+                        <span>Stock Requests</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('OPERATIONS_COORDINATOR','ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Warranty / RMA'} ? ' active' : ''"
+                       th:href="@{/warranty}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 19 6v5c0 4.6-2.9 8.1-7 10-4.1-1.9-7-5.4-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+                        </span>
+                        <span>Warranty / RMA</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Supplier Management'
+                                       or title == 'Supplier Records'
+                                       or title == 'Edit Supplier'
+                                       or title == 'Partnership Requests'
+                                       or title == 'Restock Requirements'
+                                       or title == 'Compare Suppliers'
+                                       or title == 'Create Purchase Order'
+                                       or title == 'Purchase Orders'
+                                       or title == 'Purchase Order'
+                                       or title == 'Receive Supplier Shipment'} ? ' active' : ''"
+                       th:href="@{/supplier}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 20a4.5 4.5 0 0 1 9 0"/></svg>
+                        </span>
+                        <span>Suppliers</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link"
+                       th:classappend="${title == 'Reports' or title == 'Staff Accounts' or title == 'Staff Account'} ? ' active' : ''"
+                       th:href="@{/reporting}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20V7"/></svg>
+                        </span>
+                        <span>Reports</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="user-area">
+                <a class="user-chip text-decoration-none" th:href="@{/profile}" aria-label="Open my profile">
+                    <span class="user-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+                    </span>
+                    <span class="user-meta">
+                        <span class="user-display-name" sec:authentication="principal.user.name">Staff Member</span>
+                        <span class="user-email" sec:authentication="name">user@example.com</span>
+                    </span>
+                    <span class="role-chip" sec:authorize="hasRole('ADMIN')">Admin</span>
+                    <span class="role-chip" sec:authorize="hasRole('SALES_EXEC')">Sales</span>
+                    <span class="role-chip" sec:authorize="hasRole('WAREHOUSE_CLERK')">Warehouse</span>
+                    <span class="role-chip" sec:authorize="hasRole('INVENTORY_SUPERVISOR')">Inventory</span>
+                    <span class="role-chip" sec:authorize="hasRole('OPERATIONS_COORDINATOR')">Operations</span>
+                </a>
+
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button class="btn btn-outline-primary btn-sm logout-btn" type="submit" aria-label="Log out">
+                        <span class="logout-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M13 3h5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-5"/></svg>
+                        </span>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="app-main" th:replace="${content}"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

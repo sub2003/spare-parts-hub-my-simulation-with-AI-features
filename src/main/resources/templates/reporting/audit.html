@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Reports', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div><div class="eyebrow">Reporting • Audit</div><h1 class="page-title">Audit Log</h1><p class="page-subtitle">Search immutable system events and see their persistent administrative review state.</p></div>
+        <div class="page-actions"><a class="btn btn-light" th:href="@{/reporting}">Back to Reports</a></div>
+    </header>
+
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <section class="filter-bar mb-4">
+        <form method="get" th:action="@{/reporting/audit}" class="row g-2 w-100 align-items-end">
+            <div class="col-12 col-lg-3"><label class="form-label" for="q">Search</label><input id="q" class="form-control" type="search" name="q" th:value="${q}" placeholder="Actor, action, entity, ID"/></div>
+            <div class="col-6 col-lg-2"><label class="form-label" for="from">From</label><input id="from" class="form-control" type="date" name="from" th:value="${from}"/></div>
+            <div class="col-6 col-lg-2"><label class="form-label" for="to">To</label><input id="to" class="form-control" type="date" name="to" th:value="${to}"/></div>
+            <div class="col-6 col-lg-2"><label class="form-label" for="action">Action</label><select id="action" class="form-select" name="action"><option value="">All actions</option><option th:each="a : ${actions}" th:value="${a}" th:selected="${a == action}" th:text="${a}">ACTION</option></select></div>
+            <div class="col-6 col-lg-1"><label class="form-label" for="reviewStatus">Review</label><select id="reviewStatus" class="form-select" name="reviewStatus"><option value="">All</option><option value="unreviewed" th:selected="${reviewStatus == 'unreviewed'}">Unreviewed</option><option value="reviewed" th:selected="${reviewStatus == 'reviewed'}">Reviewed</option><option value="dismissed" th:selected="${reviewStatus == 'dismissed'}">Dismissed</option><option value="action_required" th:selected="${reviewStatus == 'action_required'}">Action Req.</option></select></div>
+            <div class="col-6 col-lg-1"><button class="btn btn-primary w-100" type="submit">Filter</button></div>
+            <div class="col-6 col-lg-1"><a class="btn btn-light w-100" th:href="@{/reporting/audit}">Clear</a></div>
+        </form>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header"><div><h2 class="section-title">Audit Events</h2><p class="section-subtitle">Up to the latest 500 events, filtered in the application layer.</p></div><span class="status status-blue" th:text="${#lists.size(rows) + ' events'}">0 events</span></div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(rows)}">
+            <table class="table align-middle">
+                <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Record</th><th>Review</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="row : ${rows}">
+                    <td th:text="${#temporals.format(row.audit.loggedAt,'yyyy-MM-dd HH:mm')}">time</td>
+                    <td><div class="fw-semibold" th:text="${row.audit.user != null ? row.audit.user.name : 'System'}">Actor</div><div class="small text-muted" th:if="${row.audit.user != null}" th:text="${row.audit.user.userCode}">CODE</div></td>
+                    <td><span class="status status-blue" th:text="${row.audit.actionType}">ACTION</span><span class="status status-red ms-1" th:if="${row.anomaly}">flag</span></td>
+                    <td th:text="${row.audit.tableName}">table</td>
+                    <td th:text="${row.audit.recordId}">1</td>
+                    <td><span class="status" th:classappend="${row.reviewStatus == 'unreviewed'} ? ' status-pending' : (${row.reviewStatus == 'action_required'} ? ' status-critical' : ' status-green')" th:text="${row.reviewStatus}">unreviewed</span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" th:href="@{/reporting/audit/{id}(id=${row.audit.logId})}">Details</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(rows)}"><h3>No audit events found</h3><p>Change the filters or perform a system action to create an audit event.</p></div>
+    </section>
+</main>
+</body>
+</html>

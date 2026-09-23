@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: page(title='Product Inventory', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Inventory • Product Control</div>
+            <h1 class="page-title">Product Inventory</h1>
+            <p class="page-subtitle">Create and maintain products while protecting stock, serial, supplier and sales history.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/inventory}">Inventory Overview</a>
+            <a class="btn btn-outline-primary" th:href="@{/inventory/locations}">Storage Locations</a>
+            <a sec:authorize="hasAnyRole('ADMIN','WAREHOUSE_CLERK')"
+               class="btn btn-primary" th:href="@{/inventory/products/new}">+ Add Product</a>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Current Inventory</h2>
+                <p class="section-subtitle">New products automatically become available to Supplier Management for explicit supplier-product linking.</p>
+            </div>
+            <span class="status status-blue" th:text="${#lists.size(rows) + ' products'}">0 products</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Reorder</th>
+                    <th>Serials</th>
+                    <th>Location</th>
+                    <th>Urgency</th>
+                    <th sec:authorize="hasAnyRole('ADMIN','WAREHOUSE_CLERK')">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${rows}">
+                    <td>
+                        <div class="fw-bold" th:text="${row.product.name}">Product</div>
+                        <div class="text-muted small" th:text="${row.product.productCode + ' • ' + row.product.brand}">CODE</div>
+                        <div class="text-muted small" th:if="${row.product.warrantyPeriodMonths != null}"
+                             th:text="${row.product.warrantyPeriodMonths + ' month warranty'}">Warranty</div>
+                    </td>
+                    <td th:text="${row.product.category}">GPU</td>
+                    <td class="fw-semibold" th:text="${row.product.price}">0.00</td>
+                    <td>
+                        <span class="stock-value"
+                              th:classappend="${row.outOfStock} ? ' stock-out' : (${row.lowStock} ? ' stock-low' : ' stock-good')"
+                              th:text="${row.product.stockCount}">0</span>
+                    </td>
+                    <td>
+                        <form sec:authorize="hasAnyRole('ADMIN','WAREHOUSE_CLERK')"
+                              class="d-flex gap-2" method="post"
+                              th:action="@{/inventory/products/{id}/reorder-level(id=${row.product.productId})}">
+                            <input class="form-control form-control-sm" style="width:82px" type="number" min="0"
+                                   name="reorderLevel" th:value="${row.product.reorderLevel}" required/>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                        </form>
+                        <span sec:authorize="hasRole('SALES_EXEC')" th:text="${row.product.reorderLevel}">0</span>
+                    </td>
+                    <td>
+                        <div th:if="${row.serialTracked}">
+                            <span class="status status-purple">Serial tracked</span>
+                            <div class="small text-muted mt-1"
+                                 th:text="${row.availableSerials + ' available / ' + row.totalSerials + ' recorded'}">0</div>
+                        </div>
+                        <span th:unless="${row.serialTracked}" class="status status-blue">Standard stock</span>
+                    </td>
+                    <td>
+                        <div th:if="${row.product.location != null}">
+                            <span class="location-chip" th:text="${row.product.location.locationCode}">A1-S1-B1</span>
+                            <div class="small text-muted mt-1"
+                                 th:text="${'Aisle ' + row.product.location.aisle + ' / Shelf ' + row.product.location.shelf + ' / Bin ' + row.product.location.bin}">Location</div>
+                        </div>
+                        <span th:unless="${row.product.location != null}" class="status status-red">Unassigned</span>
+                    </td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${row.product.urgencyScore != null and row.product.urgencyScore >= 70} ? ' status-red' : (${row.product.urgencyScore != null and row.product.urgencyScore >= 40} ? ' status-amber' : ' status-green')"
+                              th:text="${row.product.urgencyScore != null ? row.product.urgencyScore : 0}">0</span>
+                    </td>
+                    <td sec:authorize="hasAnyRole('ADMIN','WAREHOUSE_CLERK')">
+                        <a class="btn btn-sm btn-outline-primary"
+                           th:href="@{/inventory/products/{id}/edit(id=${row.product.productId})}">Edit</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(rows)}">
+                    <td colspan="9">
+                        <div class="empty-state py-4">
+                            <h3>No products found</h3>
+                            <p>Create the first product to begin inventory management.</p>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

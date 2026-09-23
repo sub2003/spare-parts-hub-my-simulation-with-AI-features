@@ -1,0 +1,11 @@
+product_id,product_code,name,category,brand
+1,CPU001,AMD Ryzen 7 7700,CPU,AMD
+2,MB001,MSI B650M Gaming Plus,Motherboard,MSI
+3,RAM001,Kingston Fury 16GB DDR5,RAM,Kingston
+4,GPU001,ASUS RTX 4060 8GB,GPU,ASUS
+5,SSD001,Samsung 990 EVO 1TB,SSD,Samsung
+6,PSU001,Corsair RM750e 750W,PSU,Corsair
+7,CASE001,NZXT H5 Flow,Case,NZXT
+8,COOL001,DeepCool AK400,Cooler,DeepCool
+9,CPU002,Intel Core i5-14400F,CPU,Intel
+10,MB002,ASUS PRIME B760M-A,Motherboard,ASUS

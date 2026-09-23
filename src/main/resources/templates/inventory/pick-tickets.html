@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Pick Tickets', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div><div class="eyebrow">Inventory • Pick Queue</div><h1 class="page-title">Pick Tickets</h1><p class="page-subtitle">Open a ticket to see exact products, quantities, serials and warehouse locations.</p></div>
+        <div class="page-actions"><a class="btn btn-light" th:href="@{/inventory}">Inventory Overview</a><a class="btn btn-primary" th:href="@{/inventory/pick-tickets/scan}">Scan / Find Ticket</a></div>
+    </header>
+
+    <section class="table-card">
+        <div class="table-card-header"><div><h2 class="section-title">Warehouse Queue</h2><p class="section-subtitle">Pending and processed tickets are listed with their current fulfillment state.</p></div><span class="status status-blue" th:text="${#lists.size(tickets) + ' tickets'}">0 tickets</span></div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(tickets)}">
+            <table class="table align-middle"><thead><tr><th>Ticket</th><th>Sale</th><th>Created</th><th>Status</th><th>Operator</th><th class="text-end">Actions</th></tr></thead><tbody>
+            <tr th:each="t : ${tickets}">
+                <td><span class="code-chip" th:text="${t.ticketCode}">PICK-000001</span></td><td class="fw-semibold" th:text="${t.sale.saleCode}">SALE-000001</td><td th:text="${#temporals.format(t.createdAt,'yyyy-MM-dd HH:mm')}">2026-09-14</td>
+                <td><span class="status" th:classappend="${t.status.name() == 'completed'} ? ' status-green' : (${t.status.name() == 'partially_completed'} ? ' status-purple' : (${t.status.name() == 'exception'} ? ' status-red' : ' status-amber'))" th:text="${#strings.replace(t.status.name(),'_',' ')}">pending</span></td>
+                <td th:text="${t.fulfilledBy != null ? t.fulfilledBy.name : '—'}">—</td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-primary" target="_blank" th:href="@{/inventory/pick-tickets/{id}/qr(id=${t.ticketId})}">QR</a> <a class="btn btn-sm btn-outline-primary" th:href="@{/inventory/pick-tickets/{id}(id=${t.ticketId})}">View Ticket</a></td>
+            </tr>
+            </tbody></table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(tickets)}"><h3>No pick tickets yet</h3><p>New warehouse tickets will appear here after Sales completes checkout.</p></div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: page(title='Urgency Dashboard', content=~{::main})}">
+<body>
+<main class="page-wrap module-urgency">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Function 3 • Inventory Intelligence</div>
+            <h1 class="page-title">Inventory Urgency</h1>
+            <p class="page-subtitle">
+                Prioritize replenishment using live stock, reorder levels, 30-day sales, unresolved customer demand and incoming purchase orders.
+            </p>
+        </div>
+        <div class="page-actions d-flex flex-wrap gap-2">
+            <a class="btn btn-light" th:href="@{/stockmonitoring/stock-requests}">Customer Stock Requests</a>
+            <a sec:authorize="hasRole('ADMIN')" class="btn btn-outline-primary" th:href="@{/supplier/restock-requirements}">
+                Supplier Restock Queue
+            </a>
+            <form method="post" th:action="@{/stockmonitoring/recalculate}" class="d-inline">
+                <button class="btn btn-primary" type="submit">Recalculate Now</button>
+            </form>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--urgency" aria-labelledby="urgency-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Inventory intelligence</div>
+            <h2 id="urgency-orbit-title" class="kpi-orbit-title">Stock Health Orbit</h2>
+            <p>Critical pressure, warning items and pending replenishment decisions orbit the live stock-health core.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Urgency model connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--urgency" data-kpi-orbit aria-label="Urgency monitoring KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 14 4-4"/><circle cx="12" cy="14" r="1"/></svg></span>
+                <strong>Health</strong><small>0–100 urgency</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a kpi-orbit__metric--danger"><strong class="kpi-orbit__value" th:text="${criticalCount}">0</strong><span>Critical</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b kpi-orbit__metric--alert"><strong class="kpi-orbit__value" th:text="${warningCount}">0</strong><span>Warning</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${pendingSuggestionCount}">0</strong><span>Pending Restock</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d"><strong class="kpi-orbit__value" th:text="${#lists.size(rows)}">0</strong><span>Products Scored</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Monitoring live</strong><small>Stock pressure recalculated</small></span></div>
+        </div>
+    </section>
+
+    <section class="table-card mb-4">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Product Urgency</h2>
+                <p class="section-subtitle">Every score is explainable from current operational data. Higher means greater replenishment pressure.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="status status-blue">0–100 scale</span>
+                <span class="status status-green"
+                      th:text="${lastRecalculatedAt != null ? 'Last recalculated ' + #temporals.format(lastRecalculatedAt,'yyyy-MM-dd HH:mm') : 'Awaiting first recalculation'}">
+                    Awaiting first recalculation
+                </span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Stock / Reorder</th>
+                    <th>30d Sales</th>
+                    <th>Sales Velocity</th>
+                    <th>Open Demand</th>
+                    <th>Incoming PO</th>
+                    <th>Suggested Qty</th>
+                    <th style="min-width:160px">Urgency</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${rows}">
+                    <td>
+                        <div class="fw-bold" th:text="${r.product.name}">Product</div>
+                        <div class="small text-muted" th:text="${r.product.productCode}">CODE</div>
+                    </td>
+                    <td>
+                        <strong th:text="${r.product.stockCount}">0</strong>
+                        <span class="text-muted"> / </span>
+                        <span th:text="${r.product.reorderLevel}">0</span>
+                    </td>
+                    <td th:text="${r.sold30}">0</td>
+                    <td>
+                        <span th:text="${r.dailySalesVelocity}">0.00</span>
+                        <span class="small text-muted">/ day</span>
+                    </td>
+                    <td th:text="${r.demand}">0</td>
+                    <td th:text="${r.incoming}">0</td>
+                    <td>
+                        <span class="fw-semibold" th:text="${r.suggestedQuantity}">0</span>
+                        <span class="small text-muted">units</span>
+                    </td>
+                    <td>
+                        <div class="score-wrap">
+                            <div class="score-value" th:text="${r.product.urgencyScore + ' / 100'}">0 / 100</div>
+                            <div class="score-track">
+                                <div class="score-fill"
+                                     th:classappend="${r.classification == 'Critical'} ? ' score-critical' :
+                                                     (${r.classification == 'Warning'} ? ' score-warning' : ' score-safe')"
+                                     th:style="|width:${r.product.urgencyScore}%|"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${r.classification == 'Critical'} ? ' status-critical' :
+                                              (${r.classification == 'Warning'} ? ' status-warning' : ' status-safe')"
+                              th:text="${r.classification}">Safe</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(rows)}">
+                    <td colspan="9">
+                        <div class="empty-state py-4">
+                            <h3>No products available</h3>
+                            <p>Urgency scores will appear when inventory data is available.</p>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Restock Suggestions</h2>
+                <p class="section-subtitle">Pending suggestions require supervisor review. Approved or modified items automatically appear in Supplier Management.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(suggestions)}">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Suggested Qty</th>
+                    <th>Status</th>
+                    <th>Reason / Review Note</th>
+                    <th>Reviewed By</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${suggestions}">
+                    <td>
+                        <div class="fw-semibold" th:text="${s.product.name}">Product</div>
+                        <div class="small text-muted" th:text="${s.product.productCode}">CODE</div>
+                    </td>
+                    <td th:text="${s.suggestedQuantity}">0</td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${s.status.name() == 'approved'} ? ' status-approved' :
+                                              (${s.status.name() == 'rejected'} ? ' status-rejected' :
+                                              (${s.status.name() == 'modified'} ? ' status-purple' : ' status-pending'))"
+                              th:text="${#strings.replace(s.status.name(),'_',' ')}">pending</span>
+                    </td>
+                    <td class="text-muted" style="max-width:300px" th:text="${s.reason != null ? s.reason : '—'}">Reason</td>
+                    <td>
+                        <div th:text="${s.reviewedBy != null ? s.reviewedBy.name : 'Not reviewed'}">Not reviewed</div>
+                        <small class="text-muted"
+                               th:if="${s.reviewedAt != null}"
+                               th:text="${#temporals.format(s.reviewedAt,'yyyy-MM-dd HH:mm')}">date</small>
+                    </td>
+                    <td style="min-width:360px">
+                        <form th:if="${s.status.name() == 'pending'}"
+                              method="post"
+                              th:action="@{/stockmonitoring/suggestions/{id}(id=${s.suggestionId})}"
+                              class="row g-2">
+                            <div class="col-12 col-lg-4">
+                                <select name="status" class="form-select form-select-sm" required>
+                                    <option value="approved">Approve</option>
+                                    <option value="modified">Modify</option>
+                                    <option value="rejected">Reject</option>
+                                </select>
+                            </div>
+                            <div class="col-5 col-lg-3">
+                                <input class="form-control form-control-sm"
+                                       type="number"
+                                       min="1"
+                                       name="quantity"
+                                       th:value="${s.suggestedQuantity}"
+                                       aria-label="Quantity"/>
+                            </div>
+                            <div class="col-7 col-lg-3">
+                                <input class="form-control form-control-sm"
+                                       name="reason"
+                                       maxlength="255"
+                                       placeholder="Review note"
+                                       aria-label="Review reason or note"/>
+                            </div>
+                            <div class="col-12 col-lg-2">
+                                <button class="btn btn-sm btn-outline-primary w-100" type="submit">Save</button>
+                            </div>
+                        </form>
+
+                        <div th:if="${s.status.name() != 'pending'}" class="small text-muted">
+                            Review complete.
+                            <a sec:authorize="hasRole('ADMIN')"
+                               th:if="${s.status.name() == 'approved' or s.status.name() == 'modified'}"
+                               th:href="@{/supplier/restock-requirements}"
+                               class="ms-1">Open Supplier Management →</a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(suggestions)}">
+            <h3>No restock suggestions</h3>
+            <p>Suggestions appear when the calculated urgency reaches the replenishment threshold.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

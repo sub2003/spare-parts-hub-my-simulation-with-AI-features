@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Staff Account', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Access & Role Management</div>
+            <h1 class="page-title" th:text="${editing ? 'Edit Staff Account' : 'Create Staff Account'}">Staff Account</h1>
+            <p class="page-subtitle">Critical account and role changes are written to the audit trail.</p>
+        </div>
+        <a class="btn btn-light" th:href="@{/reporting/staff}">Back to Staff</a>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <section class="form-card" style="max-width:none">
+                <form method="post"
+                      th:object="${form}"
+                      th:action="${editing} ? @{/reporting/staff/{id}(id=${staff.userId})} : @{/reporting/staff}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="userCode">Staff Code</label>
+                            <input id="userCode" class="form-control" th:field="*{userCode}" maxlength="20" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="role">Role</label>
+                            <select id="role" class="form-select text-capitalize" th:field="*{role}" required>
+                                <option value="">Select role</option>
+                                <option th:each="r : ${roles}"
+                                        th:value="${r}"
+                                        th:text="${#strings.replace(r.name(),'_',' ')}">Role</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="staffName">Name</label>
+                            <input id="staffName" class="form-control" th:field="*{name}" maxlength="50" required/>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="staffEmail">Email</label>
+                            <input id="staffEmail" class="form-control" type="email" th:field="*{email}" maxlength="254" required/>
+                        </div>
+                        <div class="col-12" th:unless="${editing}">
+                            <label class="form-label" for="temporaryPassword">Temporary Password</label>
+                            <input id="temporaryPassword" class="form-control" type="password"
+                                   th:field="*{temporaryPassword}" minlength="8" required/>
+                            <div class="form-text">For this local simulation, give the temporary password directly to the staff member.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a class="btn btn-light" th:href="@{/reporting/staff}">Cancel</a>
+                        <button class="btn btn-primary" type="submit"
+                                th:text="${editing ? 'Save Account' : 'Create Account'}">Save</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div class="col-lg-5" th:if="${editing}">
+            <section class="form-card" style="max-width:none">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Account Status</h2>
+                        <p class="section-subtitle">Disable access without deleting the staff record.</p>
+                    </div>
+                    <span class="status"
+                          th:classappend="${staff.active} ? ' status-green' : ' status-red'"
+                          th:text="${staff.active ? 'Active' : 'Inactive'}">Active</span>
+                </div>
+                <form method="post" th:action="@{/reporting/staff/{id}/active(id=${staff.userId})}" class="mb-4">
+                    <input type="hidden" name="active" th:value="${!staff.active}"/>
+                    <button class="btn w-100"
+                            th:classappend="${staff.active} ? ' btn-outline-danger' : ' btn-outline-success'"
+                            type="submit"
+                            th:text="${staff.active ? 'Deactivate Account' : 'Activate Account'}">Deactivate</button>
+                </form>
+
+                <div class="soft-divider my-4"></div>
+
+                <h2 class="section-title">Admin Password Reset</h2>
+                <p class="section-subtitle mb-3">Set a temporary password. The existing password hash is never displayed.</p>
+                <form method="post" th:action="@{/reporting/staff/{id}/reset-password(id=${staff.userId})}">
+                    <label class="form-label" for="adminTempPassword">Temporary Password</label>
+                    <input id="adminTempPassword" class="form-control" type="password"
+                           name="temporaryPassword" minlength="8" required/>
+                    <button class="btn btn-outline-primary w-100 mt-3" type="submit">Reset Password</button>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Supplier Management CSS -->
+<th:block th:fragment="assets">
+    <link rel="stylesheet"
+          th:href="@{/css/supplier-management.css}"/>
+</th:block>
+
+
+<!-- Flash messages -->
+<th:block th:fragment="alerts">
+
+    <div th:if="${success}"
+         class="alert alert-success alert-dismissible fade show"
+         role="alert">
+
+        <strong>Success.</strong>
+        <span th:text="${success}"></span>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+
+
+    <div th:if="${error}"
+         class="alert alert-danger alert-dismissible fade show"
+         role="alert">
+
+        <strong>Could not complete the action.</strong>
+        <span th:text="${error}"></span>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+
+</th:block>
+
+
+<!-- Supplier Management navigation -->
+<div th:fragment="subnav(active)"
+     class="supplier-subnav no-print">
+
+    <ul class="nav nav-pills gap-1"
+        aria-label="Supplier Management navigation">
+
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${active == 'dashboard'} ? ' active' : ''"
+               th:href="@{/supplier}">
+                Overview
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${active == 'suppliers'} ? ' active' : ''"
+               th:href="@{/supplier/records}">
+                Suppliers
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${active == 'partnerships'} ? ' active' : ''"
+               th:href="@{/supplier/partnerships}">
+                Partnership Requests
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${active == 'offers'} ? ' active' : ''"
+               th:href="@{/supplier/offers}">
+                Supplier Offers
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${active == 'restock'} ? ' active' : ''"
+               th:href="@{/supplier/restock-requirements}">
+                Restock Requirements
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${active == 'orders'} ? ' active' : ''"
+               th:href="@{/supplier/purchase-orders}">
+                Purchase Orders
+            </a>
+        </li>
+
+    </ul>
+
+</div>
+
+
+<!-- Supplier Management JavaScript -->
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/supplier-management.js}"></script>
+</th:block>
+
+</body>
+</html>

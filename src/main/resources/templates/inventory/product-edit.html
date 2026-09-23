@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Edit Product', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Inventory • Product Control</div>
+            <h1 class="page-title">Edit Product</h1>
+            <p class="page-subtitle" th:text="${product.productCode + ' • ' + product.name}">Product</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/inventory/products}">Cancel</a>
+        </div>
+    </header>
+
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="metric-grid product-edit-summary mb-3">
+        <article class="metric-card">
+            <div class="metric-label">Current Stock</div>
+            <div class="metric-value" th:text="${product.stockCount}">0</div>
+            <div class="metric-note">Stock is not overwritten from the normal edit form.</div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-label">Serial Mode</div>
+            <div class="metric-value metric-value-text" th:text="${product.serialTracked ? 'Tracked' : 'Standard'}">Standard</div>
+            <div class="metric-note">Mode changes are blocked when they would invalidate existing stock/serial data.</div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-label">Storage</div>
+            <div class="metric-value metric-value-text" th:text="${product.location != null ? product.location.locationCode : 'Unassigned'}">Unassigned</div>
+            <div class="metric-note">Changing the bin does not alter stock quantity.</div>
+        </article>
+    </section>
+
+    <form method="post" th:action="@{/inventory/products/{id}(id=${product.productId})}" th:object="${form}">
+        <section class="form-card mb-3">
+            <h2 class="section-title mb-3">Product Identity</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="productCode">Product Code / SKU</label>
+                    <input id="productCode" class="form-control" th:field="*{productCode}" maxlength="20" required/>
+                    <div th:if="${errorField == 'productCode'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="name">Product Name</label>
+                    <input id="name" class="form-control" th:field="*{name}" maxlength="50" required/>
+                    <div th:if="${errorField == 'name'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="category">Category</label>
+                    <input id="category" class="form-control" th:field="*{category}" list="categoryOptions" maxlength="30" required/>
+                    <datalist id="categoryOptions"><option th:each="value : ${categories}" th:value="${value}"></option></datalist>
+                    <div th:if="${errorField == 'category'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="brand">Brand</label>
+                    <input id="brand" class="form-control" th:field="*{brand}" list="brandOptions" maxlength="30" required/>
+                    <datalist id="brandOptions"><option th:each="value : ${brands}" th:value="${value}"></option></datalist>
+                    <div th:if="${errorField == 'brand'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-card mb-3">
+            <h2 class="section-title mb-3">Pricing, Reorder & Warranty</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="price">Selling Price (LKR)</label>
+                    <input id="price" class="form-control" type="number" min="0.01" step="0.01" th:field="*{price}" required/>
+                    <div th:if="${errorField == 'price'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="reorderLevel">Reorder Level</label>
+                    <input id="reorderLevel" class="form-control" type="number" min="0" th:field="*{reorderLevel}" required/>
+                    <div th:if="${errorField == 'reorderLevel'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="warrantyPeriodMonths">Warranty Period (months)</label>
+                    <input id="warrantyPeriodMonths" class="form-control" type="number" min="0" th:field="*{warrantyPeriodMonths}"/>
+                    <div th:if="${errorField == 'warrantyPeriodMonths'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-card mb-3">
+            <h2 class="section-title mb-3">Tracking & Storage</h2>
+            <div class="row g-3 align-items-start">
+                <div class="col-md-5">
+                    <div class="form-check product-serial-toggle mt-2">
+                        <input id="serialTracked" class="form-check-input" type="checkbox" th:field="*{serialTracked}"/>
+                        <label class="form-check-label fw-semibold" for="serialTracked">Serial-tracked product</label>
+                        <div class="form-text">Enabling is blocked while standard stock exists; disabling is blocked while serial records exist.</div>
+                        <div th:if="${errorField == 'serialTracked'}" class="text-danger small mt-1" th:text="${error}"></div>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <label class="form-label" for="locationId">Storage Location</label>
+                    <select id="locationId" class="form-select" th:field="*{locationId}">
+                        <option value="">Unassigned</option>
+                        <option th:each="location : ${locations}"
+                                th:value="${location.locationId}"
+                                th:text="${location.locationCode + ' — Aisle ' + location.aisle + ' / Shelf ' + location.shelf + ' / Bin ' + location.bin}"></option>
+                    </select>
+                    <div th:if="${errorField == 'locationId'}" class="text-danger small mt-1" th:text="${error}"></div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a class="btn btn-light" th:href="@{/inventory/products}">Cancel</a>
+                <button class="btn btn-primary" type="submit">Save Changes</button>
+            </div>
+        </section>
+    </form>
+</main>
+</body>
+</html>

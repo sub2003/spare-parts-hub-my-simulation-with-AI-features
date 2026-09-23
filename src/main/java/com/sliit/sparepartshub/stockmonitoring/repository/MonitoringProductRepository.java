@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.stockmonitoring.repository;import com.sliit.sparepartshub.entity.Product;import org.springframework.data.jpa.repository.*;import java.util.*;public interface MonitoringProductRepository extends JpaRepository<Product,Integer>{@EntityGraph(attributePaths="location")List<Product> findAllByOrderByUrgencyScoreDesc();}

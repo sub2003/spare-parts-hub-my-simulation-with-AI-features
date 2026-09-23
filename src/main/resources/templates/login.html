@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Staff Login - Spare Parts Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/app-shell.css}"/>
+</head>
+<body>
+<main class="login-page d-flex align-items-center">
+    <section class="login-shell" aria-label="Staff sign in">
+        <div class="login-visual">
+            <div>
+                <img class="login-logo"
+                     width="250"
+                     height="52"
+                     th:src="@{/images/spare-parts-hub-logo.svg}"
+                     src="/images/spare-parts-hub-logo.svg"
+                     alt="Spare Parts Hub"/>
+
+                <div class="login-copy mt-5">
+                    <div class="eyebrow mb-3">Integrated Operations Workspace</div>
+                    <h1>Every store operation, connected.</h1>
+                    <p>
+                        Inventory, sales, restocking, warranty, suppliers and reporting
+                        share one clear operational workflow.
+                    </p>
+                    <div class="typewriter-line" aria-live="polite">
+                        <span class="typewriter-text"
+                              data-typewriter
+                              data-typewriter-phrases="Inventory connected|Suppliers coordinated|Stock monitored|Operations simplified">Inventory connected</span>
+                        <span class="typewriter-cursor" aria-hidden="true"></span>
+                    </div>
+                    <div class="login-badge-row" aria-label="Workspace capabilities">
+                        <span class="hero-mini-badge">Live inventory</span>
+                        <span class="hero-mini-badge">Role-based access</span>
+                        <span class="hero-mini-badge">Connected procurement</span>
+                    </div>
+                </div>
+
+                <div class="login-visual-demo" aria-hidden="true">
+                    <div class="login-demo-toolbar">
+                        <span class="login-demo-dot"></span>
+                        <span class="login-demo-dot"></span>
+                        <span class="login-demo-dot"></span>
+                    </div>
+                    <div class="login-demo-content">
+                        <div class="login-demo-card"><span></span><strong></strong></div>
+                        <div class="login-demo-card"><span></span><strong></strong></div>
+                        <div class="login-demo-card"><span></span><strong></strong></div>
+                    </div>
+                </div>
+
+                <div class="login-feature">Real-time stock and warehouse visibility</div>
+                <div class="login-feature">Role-based access for every staff function</div>
+                <div class="login-feature">Connected procurement and audit history</div>
+            </div>
+
+            <p class="text-muted small mb-0">Spare Parts Hub • SE2030 integrated simulation</p>
+        </div>
+
+        <div class="login-form-side">
+            <div class="login-card">
+                <div class="eyebrow mb-2">Staff Access</div>
+                <h2 class="login-title mb-2">Welcome back</h2>
+                <p class="text-muted mb-4">Sign in with your staff account to continue.</p>
+
+                <div th:if="${param.disabled}" class="alert alert-warning" role="alert">
+                    This staff account is inactive. Contact an administrator if access should be restored.
+                </div>
+                <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                    Invalid email or password, or the account is inactive. Please try again.
+                </div>
+                <div th:if="${param.logout}" class="alert alert-success" role="alert">
+                    You have been signed out successfully.
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Email address</label>
+                        <input id="username"
+                               class="form-control"
+                               type="email"
+                               name="username"
+                               autocomplete="username"
+                               placeholder="name@example.com"
+                               data-autofocus
+                               required/>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password"
+                               class="form-control"
+                               type="password"
+                               name="password"
+                               autocomplete="current-password"
+                               placeholder="Enter your password"
+                               required/>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2" type="submit">Sign In</button>
+                </form>
+
+                <div class="d-flex align-items-center gap-2 mt-4 text-muted small">
+                    <span class="user-avatar" aria-hidden="true" style="width:1.75rem;height:1.75rem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 19 6v5c0 4.6-2.9 8.1-7 10-4.1-1.9-7-5.4-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+                    </span>
+                    <span>Secure role-based staff access</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

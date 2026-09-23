@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Sales / POS', content=~{::main})}">
+<body>
+<main class="page-wrap module-sales">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Function 2 • Point of Sale</div>
+            <h1 class="page-title">Product Search & Checkout</h1>
+            <p class="page-subtitle">
+                Search live inventory, choose exact serial-numbered units, review compatibility and confirm payment.
+            </p>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--sales" aria-labelledby="sales-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Point-of-sale live snapshot</div>
+            <h2 id="sales-orbit-title" class="kpi-orbit-title">Checkout Core</h2>
+            <p>Search availability and the current cart stay visible while checkout work remains stable.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> POS session active</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--sales" data-kpi-orbit aria-label="Sales and POS KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h2l2.2 9.2a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 1.9-1.4L21 8H7"/><circle cx="10" cy="19" r="1.4"/><circle cx="18" cy="19" r="1.4"/></svg></span>
+                <strong>POS</strong><small>Sales live</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a"><strong class="kpi-orbit__value" th:text="${#lists.size(products)}">0</strong><span>Visible Products</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b"><strong class="kpi-orbit__value" th:text="${cart.itemCount}">0</strong><span>Cart Units</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${#lists.size(cart.lines)}">0</strong><span>Cart Lines</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d kpi-orbit__metric--wide"><strong th:text="${'LKR ' + #numbers.formatDecimal(cart.total,1,2)}">LKR 0.00</strong><span>Cart Total</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Checkout ready</strong><small>Live stock search connected</small></span></div>
+        </div>
+    </section>
+
+    <section class="filter-bar mb-3" aria-label="Product filters">
+        <form class="row g-2 w-100 align-items-end" method="get" th:action="@{/sales}">
+            <div class="col-12 col-lg-5">
+                <label class="form-label" for="q">Search products</label>
+                <div class="search-input-wrap">
+                    <svg class="search-input-icon" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="m20 20-4-4"/>
+                    </svg>
+                    <input id="q"
+                           class="form-control"
+                           name="q"
+                           th:value="${q}"
+                           placeholder="Search by SKU, product, category or brand"
+                           data-autofocus/>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-5 col-lg-3">
+                <label class="form-label" for="category">Category</label>
+                <select id="category" class="form-select" name="category">
+                    <option value="">All categories</option>
+                    <option th:each="c : ${categories}"
+                            th:value="${c}"
+                            th:text="${c}"
+                            th:selected="${c == category}">Category</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-5 col-lg-3">
+                <label class="form-label" for="brand">Brand</label>
+                <select id="brand" class="form-select" name="brand">
+                    <option value="">All brands</option>
+                    <option th:each="b : ${brands}"
+                            th:value="${b}"
+                            th:text="${b}"
+                            th:selected="${b == brand}">Brand</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2 col-lg-1">
+                <button class="btn btn-primary w-100" type="submit">Search</button>
+            </div>
+        </form>
+    </section>
+
+    <div class="pos-layout">
+        <section class="table-card">
+            <div class="table-card-header">
+                <div>
+                    <h2 class="section-title">Available Products</h2>
+                    <p class="section-subtitle">
+                        Price and availability are read from the live inventory at checkout again.
+                    </p>
+                </div>
+                <span class="status status-blue" th:text="${#lists.size(products) + ' results'}">0 results</span>
+            </div>
+
+            <div class="table-responsive" th:if="${!#lists.isEmpty(products)}">
+                <table class="table align-middle">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Availability</th>
+                        <th>Location</th>
+                        <th class="text-end">Add</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${products}">
+                        <td>
+                            <div class="fw-bold" th:text="${p.name}">Product</div>
+                            <div class="text-muted small">
+                                <span th:text="${p.productCode}">SKU</span>
+                                <span class="mx-1">•</span>
+                                <span th:text="${p.brand + ' • ' + p.category}">Brand • Category</span>
+                            </div>
+                            <span th:if="${p.serialTracked}" class="status status-purple mt-1">Serial tracked</span>
+                        </td>
+
+                        <td class="fw-semibold" th:text="${#numbers.formatDecimal(p.price,1,2)}">0.00</td>
+
+                        <td>
+                            <span class="stock-value"
+                                  th:classappend="${p.stockCount == 0} ? ' stock-out' :
+                                                   (${p.stockCount <= p.reorderLevel} ? ' stock-low' : ' stock-good')"
+                                  th:text="${p.stockCount}">0</span>
+                            <div class="small text-muted"
+                                 th:text="${p.stockCount == 0 ? 'Out of stock' :
+                                          (p.stockCount <= p.reorderLevel ? 'Low stock' : 'In stock')}">
+                                In stock
+                            </div>
+                            <div th:if="${p.serialTracked}" class="small text-primary mt-1"
+                                 th:text="${serialAvailability.get(p.productId) + ' physical serial(s) available'}">
+                                0 physical serials available
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="location-chip"
+                                  th:text="${p.location != null ? p.location.locationCode : 'Unassigned'}">
+                                A1-S1-B1
+                            </span>
+                        </td>
+
+                        <td class="text-end">
+                            <form method="post" th:action="@{/sales/cart/add}"
+                                  class="d-inline-flex gap-2 align-items-center">
+                                <input type="hidden" name="productId" th:value="${p.productId}"/>
+                                <input class="form-control form-control-sm"
+                                       style="width:72px"
+                                       name="quantity"
+                                       type="number"
+                                       min="1"
+                                       th:max="${p.serialTracked
+                                                ? (p.stockCount < serialAvailability.get(p.productId)
+                                                   ? p.stockCount
+                                                   : serialAvailability.get(p.productId))
+                                                : p.stockCount}"
+                                       value="1"
+                                       aria-label="Quantity"
+                                       th:disabled="${p.stockCount == 0
+                                                    or (p.serialTracked and serialAvailability.get(p.productId) == 0)}"/>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        type="submit"
+                                        th:disabled="${p.stockCount == 0
+                                                     or (p.serialTracked and serialAvailability.get(p.productId) == 0)}">
+                                    Add
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(products)}">
+                <span class="empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="m20 20-4-4"/>
+                    </svg>
+                </span>
+                <h3>No products match this search</h3>
+                <p>Try another SKU, keyword, category or brand.</p>
+            </div>
+        </section>
+
+        <aside class="pos-cart">
+            <section class="panel">
+                <div class="section-header mb-0">
+                    <div>
+                        <h2 class="section-title">Current Cart</h2>
+                        <p class="section-subtitle" th:text="${cart.itemCount + ' items'}">0 items</p>
+                    </div>
+                    <form th:if="${!#lists.isEmpty(cart.lines)}"
+                          method="post"
+                          th:action="@{/sales/cart/clear}">
+                        <button class="btn btn-sm btn-light" type="submit">Clear</button>
+                    </form>
+                </div>
+
+                <div th:if="${#lists.isEmpty(cart.lines)}" class="empty-state py-4">
+                    <span class="empty-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <circle cx="9" cy="20" r="1.5"/>
+                            <circle cx="18" cy="20" r="1.5"/>
+                            <path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.5h7.8a2 2 0 0 0 1.9-1.4L21 8H7"/>
+                        </svg>
+                    </span>
+                    <h3>Your cart is empty</h3>
+                    <p>Add products from the catalog to begin a sale.</p>
+                </div>
+
+                <div th:each="line, stat : ${cart.lines}" class="cart-line">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <div class="cart-product" th:text="${line.name}">Product</div>
+                            <div class="small text-muted">
+                                <span th:text="${line.code}">SKU</span>
+                                <span class="mx-1">•</span>
+                                Catalog:
+                                <span th:text="${#numbers.formatDecimal(line.catalogPrice,1,2)}">0.00</span>
+                            </div>
+                        </div>
+
+                        <form method="post" th:action="@{/sales/cart/remove}">
+                            <input type="hidden" name="index" th:value="${stat.index}"/>
+                            <button class="btn btn-sm btn-link text-danger p-0" type="submit">Remove</button>
+                        </form>
+                    </div>
+
+                    <form method="post"
+                          th:action="@{/sales/cart/update}"
+                          class="row g-2 mt-2 discount-line-form"
+                          th:attr="data-catalog-price=${line.catalogPrice}">
+                        <input type="hidden" name="index" th:value="${stat.index}"/>
+
+                        <div class="col-4">
+                            <label class="form-label">Qty</label>
+                            <input class="form-control form-control-sm"
+                                   type="number"
+                                   min="1"
+                                   name="quantity"
+                                   th:value="${line.quantity}"
+                                   required/>
+                        </div>
+
+                        <div class="col-8">
+                            <label class="form-label">Original unit price</label>
+                            <div class="form-control form-control-sm discount-readonly"
+                                 th:text="${'LKR ' + #numbers.formatDecimal(line.catalogPrice,1,2)}">
+                                LKR 0.00
+                            </div>
+                        </div>
+
+                        <div class="col-5">
+                            <label class="form-label">Discount amount / unit</label>
+                            <input class="form-control form-control-sm discount-amount-input"
+                                   type="number"
+                                   step="0.01"
+                                   min="0"
+                                   th:attr="max=${line.catalogPrice}"
+                                   name="discountAmount"
+                                   th:value="${line.discountAmount}"
+                                   inputmode="decimal"
+                                   required/>
+                        </div>
+
+                        <div class="col-7">
+                            <label class="form-label">Final unit price</label>
+                            <div class="form-control form-control-sm discount-final-price"
+                                 th:text="${'LKR ' + #numbers.formatDecimal(line.unitPrice,1,2)}">
+                                LKR 0.00
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Discount reason</label>
+                            <input class="form-control form-control-sm discount-reason-input"
+                                   name="discountReason"
+                                   th:value="${line.discountReason}"
+                                   placeholder="Required when discount amount is greater than 0"/>
+                            <div class="form-text">Discount is fixed per unit and does not change the catalog price.</div>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                            <div class="small text-muted">
+                                Line total:
+                                <strong class="discount-line-total text-dark"
+                                        th:text="${'LKR ' + #numbers.formatDecimal(line.lineTotal,1,2)}">LKR 0.00</strong>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Update Line</button>
+                        </div>
+                    </form>
+
+                    <div th:if="${line.serialTracked}" class="mt-3 p-3 rounded border bg-light">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <div class="fw-semibold">Select physical serial numbers</div>
+                                <div class="small text-muted"
+                                     th:text="${'Select exactly ' + line.quantity + ' unit(s).'}">
+                                    Select exactly 1 unit.
+                                </div>
+                            </div>
+                            <span class="status"
+                                  th:classappend="${#lists.size(line.selectedSerialIds) == line.quantity}
+                                                  ? ' status-green' : ' status-amber'"
+                                  th:text="${#lists.size(line.selectedSerialIds) + '/' + line.quantity + ' selected'}">
+                                0/1 selected
+                            </span>
+                        </div>
+
+                        <form method="post" th:action="@{/sales/cart/serials}">
+                            <input type="hidden" name="index" th:value="${stat.index}"/>
+
+                            <select class="form-select form-select-sm"
+                                    name="serialIds"
+                                    multiple
+                                    size="4"
+                                    th:attr="aria-label=${'Serial numbers for ' + line.name}">
+                                <option th:each="serial : ${serialOptions.get(line.productId)}"
+                                        th:value="${serial.serialId}"
+                                        th:text="${serial.serialValue}"
+                                        th:selected="${line.selectedSerialIds.contains(serial.serialId)}">
+                                    SERIAL-001
+                                </option>
+                            </select>
+
+                            <div class="form-text">
+                                Hold Ctrl (Windows) or Command (Mac) to select multiple serials.
+                            </div>
+
+                            <button class="btn btn-sm btn-outline-primary mt-2" type="submit">
+                                Save Serial Selection
+                            </button>
+                        </form>
+
+                        <div th:if="${#lists.isEmpty(serialOptions.get(line.productId))}"
+                             class="small text-danger mt-2">
+                            No valid in-stock serial numbers are currently available.
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(conflicts)}" class="alert alert-warning mt-3 mb-0">
+                    <strong>Compatibility issue detected</strong>
+                    <div class="small mt-1" th:each="c : ${conflicts}"
+                         th:text="${c.productA + ' ↔ ' + c.productB + ': ' + c.reason}">
+                        Conflict
+                    </div>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(cart.lines)}" class="cart-total">
+                    <div class="cart-money-summary">
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-semibold"
+                                  th:text="${'LKR ' + #numbers.formatDecimal(cart.subtotal,1,2)}">LKR 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center gap-3 mt-1"
+                             th:classappend="${cart.discountTotal.signum() > 0} ? ' has-discount'">
+                            <span class="text-muted">Discount</span>
+                            <span class="fw-semibold cart-discount-total"
+                                  th:text="${'- LKR ' + #numbers.formatDecimal(cart.discountTotal,1,2)}">- LKR 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center gap-3 mt-2 pt-2 border-top">
+                            <span class="fw-bold text-dark">Total</span>
+                            <span class="fs-4 fw-bold text-dark cart-final-total"
+                                  th:text="${'LKR ' + #numbers.formatDecimal(cart.total,1,2)}">LKR 0.00</span>
+                        </div>
+                    </div>
+
+                    <form method="post" th:action="@{/sales/checkout}" class="mt-3">
+                        <div th:if="${!#lists.isEmpty(conflicts)}" class="mb-3">
+                            <label class="form-label" for="overrideReason">
+                                Authorized compatibility override reason
+                            </label>
+                            <textarea id="overrideReason"
+                                      class="form-control"
+                                      name="compatibilityOverrideReason"
+                                      rows="3"
+                                      placeholder="Required because a compatibility conflict is present"></textarea>
+                        </div>
+
+                        <div class="form-check p-3 rounded border bg-light mb-3">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   value="true"
+                                   name="paymentConfirmed"
+                                   id="paymentConfirmed"
+                                   required/>
+                            <label class="form-check-label fw-semibold" for="paymentConfirmed">
+                                Payment received and sale details confirmed
+                            </label>
+                            <div class="small text-muted mt-1">
+                                The final checkout revalidates stock, price and selected serials before committing.
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-2" type="submit">
+                            Payment Received / Confirm Sale
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </aside>
+    </div>
+</main>
+</body>
+</html>

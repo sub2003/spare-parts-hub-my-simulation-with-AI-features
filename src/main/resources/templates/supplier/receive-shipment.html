@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Receive Supplier Shipment', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Receive Stock</div>
+            <h1 class="page-title">Receive Supplier Shipment</h1>
+            <p class="page-subtitle mb-0">Record accepted quantities, serial numbers and discrepancies for <strong th:text="${po.poCode}">PO-000001</strong>.</p>
+        </div>
+        <a class="btn btn-outline-primary header-action no-print" th:href="@{/supplier/purchase-orders/{id}(id=${po.poId})}">Back to Purchase Order</a>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('orders')}"></th:block>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="d-flex flex-column gap-3">
+                <div class="receipt-item" th:each="item : ${items}">
+                    <div class="receipt-item-head d-flex flex-column flex-md-row justify-content-between gap-2">
+                        <div>
+                            <div class="fw-bold" th:text="${item.product.name}">Product</div>
+                            <div class="small text-muted">Ordered: <strong th:text="${item.quantityOrdered}">10</strong><span> · </span>Already received: <strong th:text="${item.receivedQuantity}">0</strong><span> · </span>Remaining: <strong th:text="${item.quantityOrdered - item.receivedQuantity}">0</strong><span> · </span>Current stock: <strong th:text="${item.product.stockCount}">0</strong></div>
+                        </div>
+                        <span class="code-chip" th:text="${item.product.productCode != null ? item.product.productCode : 'Product #' + item.product.productId}">PRD-001</span>
+                    </div>
+                    <div class="receipt-item-body">
+                        <form th:action="@{/supplier/purchase-orders/{id}/receive(id=${po.poId})}" method="post"
+                              data-confirm="Record this receipt and update inventory stock?">
+                            <input type="hidden" name="poItemId" th:value="${item.poItemId}"/>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label" th:for="${'acceptedQuantity-' + item.poItemId}">Accepted Quantity <span class="text-danger">*</span></label>
+                                    <input class="form-control" th:id="${'acceptedQuantity-' + item.poItemId}" name="acceptedQuantity"
+                                           type="number" min="0" th:max="${item.quantityOrdered - item.receivedQuantity}" th:value="${item.quantityOrdered - item.receivedQuantity}" required/>
+                                    <div class="form-text">Only units physically accepted into inventory.</div>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label" th:for="${'serialNumbers-' + item.poItemId}">Serial Numbers <span class="text-muted fw-normal">(optional)</span></label>
+                                    <textarea class="form-control" th:id="${'serialNumbers-' + item.poItemId}" name="serialNumbers" rows="3" placeholder="Enter one serial number per line"></textarea>
+                                    <div class="form-text">Serial count cannot exceed accepted quantity; duplicate serials are rejected.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" th:for="${'discrepancyNote-' + item.poItemId}">Discrepancy Note</label>
+                                    <textarea class="form-control" th:id="${'discrepancyNote-' + item.poItemId}" name="discrepancyNote" rows="3" maxlength="1000"
+                                              placeholder="Optional – damaged, missing or rejected units"></textarea>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3 no-print">
+                                <button class="btn btn-success" type="submit">Receive Shipment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="empty-state panel-card" th:if="${#lists.isEmpty(items)}">
+                    <div class="empty-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div>
+                    <h3 class="h6 text-dark">No order items found</h3>
+                    <p class="mb-0">This purchase order has no item rows to receive.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="panel-card position-sticky" style="top: 1rem;">
+                <div class="metric-label">Receipt Summary</div>
+                <h2 class="h5 fw-bold mt-2" th:text="${po.poCode}">PO-000001</h2>
+                <div class="small text-muted mb-3" th:text="${po.supplier.name}">Supplier</div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Status</span><span th:class="${'status-pill status-' + po.status}" th:text="${#strings.replace(po.status.toString(), '_', ' ')}">shipped</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Items</span><strong th:text="${#lists.size(items)}">1</strong></div>
+                <div class="soft-divider my-3"></div>
+                <div class="note-box"><strong>Important:</strong> accepted units are immediately added to inventory. Do not submit the same physical units twice.</div>
+                <div class="small text-muted mt-3">A complete receipt marks the PO Received; a short receipt marks it Partially Received. Receipt details are audited.</div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

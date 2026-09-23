@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Spare Parts Hub</title>
+  <desc id="desc">A blue computer chip combined with a small gear and inventory box.</desc>
+  <defs>
+    <linearGradient id="chip" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect x="11" y="11" width="42" height="42" rx="12" fill="url(#chip)"/>
+  <g fill="#BFDBFE">
+    <rect x="2" y="18" width="11" height="4" rx="2"/><rect x="2" y="30" width="11" height="4" rx="2"/><rect x="2" y="42" width="11" height="4" rx="2"/>
+    <rect x="51" y="18" width="11" height="4" rx="2"/><rect x="51" y="30" width="11" height="4" rx="2"/><rect x="51" y="42" width="11" height="4" rx="2"/>
+    <rect x="18" y="2" width="4" height="11" rx="2"/><rect x="30" y="2" width="4" height="11" rx="2"/><rect x="42" y="2" width="4" height="11" rx="2"/>
+    <rect x="18" y="51" width="4" height="11" rx="2"/><rect x="30" y="51" width="4" height="11" rx="2"/><rect x="42" y="51" width="4" height="11" rx="2"/>
+  </g>
+  <path d="M24 25.5 32 21l8 4.5v9L32 39l-8-4.5v-9Z" fill="#fff" opacity=".98"/>
+  <path d="m24 25.5 8 4.5 8-4.5M32 30v9" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="43.5" cy="43.5" r="7.5" fill="#DBEAFE" stroke="#fff" stroke-width="2"/>
+  <path d="M43.5 39.8v7.4M39.8 43.5h7.4" stroke="#1D4ED8" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

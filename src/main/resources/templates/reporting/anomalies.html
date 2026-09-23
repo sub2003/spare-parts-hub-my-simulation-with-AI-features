@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Reports', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div><div class="eyebrow">Reporting • Deterministic Rules</div><h1 class="page-title">Anomaly Review</h1><p class="page-subtitle">Explainable evidence from audit events. No AI or machine learning is used.</p></div>
+        <div class="page-actions"><a class="btn btn-light" th:href="@{/reporting}">Back to Reports</a></div>
+    </header>
+
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <section class="filter-bar mb-4">
+        <form method="get" th:action="@{/reporting/anomalies}" class="row g-2 w-100 align-items-end">
+            <div class="col-12 col-md-4"><label class="form-label" for="from">From Date</label><input id="from" class="form-control" type="date" name="from" th:value="${from}"/></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="to">To Date</label><input id="to" class="form-control" type="date" name="to" th:value="${to}"/></div>
+            <div class="col-6 col-md-2"><button class="btn btn-primary w-100" type="submit">Apply</button></div>
+            <div class="col-6 col-md-2"><a class="btn btn-light w-100" th:href="@{/reporting/anomalies}">Last 7 days</a></div>
+        </form>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header"><div><h2 class="section-title">Triggered Rules</h2><p class="section-subtitle" th:text="${from + ' to ' + to}">period</p></div><span class="status status-blue" th:text="${#lists.size(anomalies) + ' anomalies'}">0 anomalies</span></div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(anomalies)}">
+            <table class="table align-middle">
+                <thead><tr><th>Rule</th><th>Severity</th><th>Actor</th><th>Entity</th><th>Window</th><th>Evidence</th></tr></thead>
+                <tbody>
+                <tr th:each="a : ${anomalies}">
+                    <td><div class="fw-semibold" th:text="${a.type}">RULE</div><div class="small text-muted" th:text="${a.explanation}">Explanation</div></td>
+                    <td><span class="status" th:classappend="${a.severity == 'critical'} ? ' status-critical' : ' status-warning'" th:text="${a.severity}">warning</span></td>
+                    <td th:text="${a.actor}">Actor</td>
+                    <td><span th:text="${a.entity}">entity</span><div class="small text-muted" th:text="${a.record}">record</div></td>
+                    <td class="small"><span th:text="${#temporals.format(a.startedAt,'MM-dd HH:mm')}">start</span><br/><span th:text="${#temporals.format(a.endedAt,'MM-dd HH:mm')}">end</span></td>
+                    <td class="small" th:text="${a.evidence}">Evidence</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(anomalies)}"><h3>No anomalies detected for the selected period</h3><p>The configured deterministic rules found no matching evidence.</p></div>
+    </section>
+
+    <section class="panel mt-3">
+        <h2 class="section-title">Rules in this build</h2>
+        <p class="section-subtitle mb-3">Only rules supported by reliable audit evidence are enabled.</p>
+        <div class="row g-2 small">
+            <div class="col-md-4"><div class="report-rule-card"><strong>Compatibility overrides</strong><br/>3 or more by the same staff user within 30 minutes.</div></div>
+            <div class="col-md-4"><div class="report-rule-card"><strong>Product edits</strong><br/>5 or more updates to one product within 60 minutes.</div></div>
+            <div class="col-md-4"><div class="report-rule-card"><strong>Sensitive account activity</strong><br/>3 or more sensitive staff-account actions by one admin within 60 minutes.</div></div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

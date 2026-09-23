@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Supplier Records', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Supplier Directory</div>
+            <h1 class="page-title">Suppliers</h1>
+            <p class="page-subtitle mb-0">Maintain supplier contact details used by procurement without exposing portal credentials.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center no-print">
+            <div class="search-box">
+                <input class="form-control" type="search" placeholder="Search suppliers..." data-table-search="supplierTable" aria-label="Search suppliers"/>
+            </div>
+            <a class="btn btn-primary header-action" th:href="@{/supplier/records/new}">+ Add Supplier</a>
+        </div>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('suppliers')}"></th:block>
+
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(suppliers)}">
+            <table class="table table-modern" id="supplierTable">
+                <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Code</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th class="text-end no-print">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="supplier : ${suppliers}" data-search-row>
+                    <td>
+                        <div class="fw-bold" th:text="${supplier.name}">Supplier Name</div>
+                        <div class="text-muted small" th:text="${'Supplier #' + supplier.supplierId}">Supplier #1</div>
+                    </td>
+                    <td><span class="code-chip" th:text="${supplier.supplierCode != null ? supplier.supplierCode : 'Not assigned'}">SUP-001</span></td>
+                    <td th:text="${supplier.contact}">0771234567</td>
+                    <td><a th:href="${'mailto:' + supplier.email}" th:text="${supplier.email}">supplier@example.com</a></td>
+                    <td><span th:class="${supplier.active ? 'status-pill status-approved' : 'status-pill status-rejected'}" th:text="${supplier.active ? 'Active' : 'Inactive'}"></span></td>
+                    <td class="text-end no-print">
+                        <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                            <a class="btn btn-sm btn-outline-primary" th:href="@{/supplier/records/{id}/edit(id=${supplier.supplierId})}">Edit</a>
+                            <a class="btn btn-sm btn-primary" th:href="@{/supplier/records/{id}/products(id=${supplier.supplierId})}">Manage Products</a>
+                            <form class="d-inline" method="post" th:action="@{/supplier/records/{id}/active(id=${supplier.supplierId})}">
+                                <input type="hidden" name="active" th:value="${!supplier.active}">
+                                <button class="btn btn-sm btn-outline-secondary" type="submit" th:text="${supplier.active ? 'Deactivate' : 'Activate'}"></button>
+                            </form>
+                            <form class="d-inline" method="post"
+                                  th:action="@{/supplier/records/{id}/delete(id=${supplier.supplierId})}"
+                                  data-confirm="Are you sure you want to permanently delete this supplier?">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(suppliers)}">
+            <div class="empty-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+            <h3 class="h6 text-dark">No suppliers available</h3>
+            <p class="mb-0">Supplier accounts created by Admin will appear here. Partnership approval remains a separate workflow.</p>
+        </div>
+    </div>
+
+    <div class="info-box mt-3">Supplier portal credentials are intentionally not displayed or edited from Supplier Management.</div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

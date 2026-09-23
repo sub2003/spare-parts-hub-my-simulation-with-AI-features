@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Supplier Management', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">UC-05 · Supplier Management</div>
+            <h1 class="page-title">Supplier Management</h1>
+            <p class="page-subtitle mb-0">Manage suppliers, partnerships and purchase orders from restock requirement to inventory receipt.</p>
+        </div>
+        <a class="btn btn-primary header-action no-print" th:href="@{/supplier/restock-requirements}">
+            View Restock Requirements
+        </a>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('dashboard')}"></th:block>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--supplier" aria-labelledby="supplier-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Procurement network</div>
+            <h2 id="supplier-orbit-title" class="kpi-orbit-title">Supplier Network</h2>
+            <p>Supplier coverage, partnership review, approved restock work and open purchase orders in one procurement visual.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Procurement workspace connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--supplier" data-kpi-orbit aria-label="Supplier Management KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M13 20a4 4 0 0 1 8 0"/></svg></span>
+                <strong>Network</strong><small>Procurement core</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a"><strong class="kpi-orbit__value" th:text="${supplierCount}">0</strong><span>Active Suppliers</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b kpi-orbit__metric--alert"><strong class="kpi-orbit__value" th:text="${partnershipCount}">0</strong><span>Partnership Review</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${restockCount}">0</strong><span>Ready to Order</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d"><strong class="kpi-orbit__value" th:text="${poCount}">0</strong><span>Open POs</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Procurement live</strong><small>Supplier-to-receipt flow</small></span></div>
+        </div>
+    </section>
+
+    <section class="supplier-shell" aria-label="Supplier Management overview">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Procurement Workflow</h2>
+                    <p class="panel-subtitle">From approved requirement to inventory receipt</p>
+                </div>
+            </div>
+            <div class="workflow" aria-label="Five-step procurement workflow">
+                <div class="workflow-step">
+                    <div class="workflow-top">
+                        <span class="workflow-number">1</span>
+                        <span class="workflow-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+                    </div>
+                    <strong>Select Requirement</strong>
+                    <span>Approved restock request</span>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-top">
+                        <span class="workflow-number">2</span>
+                        <span class="workflow-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M5 7h14M5 7l-3 6h6L5 7ZM19 7l-3 6h6l-3-6ZM8 21h8"/></svg></span>
+                    </div>
+                    <strong>Compare Suppliers</strong>
+                    <span>Price · MOQ · Lead Time</span>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-top">
+                        <span class="workflow-number">3</span>
+                        <span class="workflow-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M12 12v6M9 15h6"/></svg></span>
+                    </div>
+                    <strong>Create Purchase Order</strong>
+                    <span>Confirm supplier &amp; items</span>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-top">
+                        <span class="workflow-number">4</span>
+                        <span class="workflow-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></span>
+                    </div>
+                    <strong>Track Shipment</strong>
+                    <span>Pending → Shipped</span>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-top">
+                        <span class="workflow-number">5</span>
+                        <span class="workflow-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 8-9 5-9-5"/><path d="M3 8l9-5 9 5v8l-9 5-9-5V8Z"/><path d="m8 16 2 2 5-5"/></svg></span>
+                    </div>
+                    <strong>Receive Stock</strong>
+                    <span>Update inventory</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Supplier Offers', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Supplier Commercial Offers</div>
+            <h1 class="page-title">Supplier Offers</h1>
+            <p class="page-subtitle mb-0">
+                Review supplier restock offers. Only current, unused offers can be permanently deleted.
+            </p>
+        </div>
+        <div class="search-box no-print">
+            <input class="form-control" type="search" placeholder="Search offers..."
+                   data-table-search="offerTable" aria-label="Search supplier offers"/>
+        </div>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('offers')}"></th:block>
+
+    <div class="info-box mb-3">
+        Used or expired offers are kept as procurement history. An offer is treated as used when a matching purchase-order item exists for the same supplier, product, agreed price and offer window.
+    </div>
+
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(offers)}">
+            <table class="table table-modern align-middle mb-0" id="offerTable">
+                <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Submitted</th>
+                    <th>Valid Until</th>
+                    <th>Status</th>
+                    <th class="text-end no-print">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="offer : ${offers}" data-search-row>
+                    <td>
+                        <div class="fw-bold" th:text="${offer.supplier.name}">Supplier</div>
+                        <div class="text-muted small" th:text="${offer.supplier.supplierCode}">SUP001</div>
+                    </td>
+                    <td th:text="${offer.product.name}">Product</td>
+                    <td th:text="${'LKR ' + #numbers.formatDecimal(offer.price,1,2)}">LKR 0.00</td>
+                    <td th:text="${offer.quantity}">1</td>
+                    <td class="small text-muted"
+                        th:text="${offer.submittedAt != null ? #temporals.format(offer.submittedAt,'yyyy-MM-dd HH:mm') : '—'}">—</td>
+                    <td th:text="${offer.validUntil != null ? offer.validUntil : 'No expiry'}">No expiry</td>
+                    <td>
+                        <span th:if="${deletableOfferIds.contains(offer.offerId)}"
+                              class="status-pill status-pending">Current / Unused</span>
+                        <span th:unless="${deletableOfferIds.contains(offer.offerId)}"
+                              class="status-pill status-approved">Preserved / Historical</span>
+                    </td>
+                    <td class="text-end no-print">
+                        <form th:if="${deletableOfferIds.contains(offer.offerId)}"
+                              method="post"
+                              th:action="@{/supplier/offers/{id}/delete(id=${offer.offerId})}"
+                              data-confirm="Delete this unused supplier offer?">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                        </form>
+                        <span th:unless="${deletableOfferIds.contains(offer.offerId)}"
+                              class="text-muted small">Preserved as history</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(offers)}">
+            <h3 class="h6 text-dark">No supplier offers</h3>
+            <p class="mb-0">Offers submitted through the Supplier Portal will appear here.</p>
+        </div>
+    </div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

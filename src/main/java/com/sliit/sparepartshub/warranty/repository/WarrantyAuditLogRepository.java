@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.warranty.repository;import com.sliit.sparepartshub.entity.AuditLog;import org.springframework.data.jpa.repository.JpaRepository;public interface WarrantyAuditLogRepository extends JpaRepository<AuditLog,Integer>{}

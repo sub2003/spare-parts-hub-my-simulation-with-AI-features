@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.sales.repository; import com.sliit.sparepartshub.entity.CompatibilityRule;import org.springframework.data.jpa.repository.JpaRepository; public interface SalesCompatibilityRuleRepository extends JpaRepository<CompatibilityRule,Integer>{}

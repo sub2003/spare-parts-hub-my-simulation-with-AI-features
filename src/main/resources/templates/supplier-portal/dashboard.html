@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Supplier Portal - Spare Parts Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/app-shell.css}"/>
+    <link rel="stylesheet" th:href="@{/css/supplier-portal.css}"/>
+</head>
+<body class="portal-body">
+<nav class="portal-nav">
+    <div class="portal-nav-inner">
+        <div class="portal-brand-wrap">
+            <img th:src="@{/images/spare-parts-hub-logo.svg}" alt="Spare Parts Hub"/>
+            <span class="portal-label">Supplier Portal</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-light" th:href="@{/supplier-portal/profile}">My Profile</a>
+            <form th:action="@{/supplier-portal/logout}" method="post">
+                <button class="btn btn-sm btn-outline-primary" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<main class="portal-page">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Supplier Workspace</div>
+            <h1 class="page-title" th:text="${supplier.name}">Supplier</h1>
+            <p class="page-subtitle">
+                <span th:text="${supplier.email}">supplier@example.com</span>
+                <span class="mx-1">•</span>
+                Review only your own products, offers, partnership requests and assigned purchase orders.
+            </p>
+        </div>
+        <span class="status status-green">Secure supplier scope</span>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--portal" aria-labelledby="portal-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Supplier account snapshot</div>
+            <h2 id="portal-orbit-title" class="kpi-orbit-title">Supplier Workspace</h2>
+            <p>Your linked products, active offers, assigned purchase orders and partnership state in one secure live visual.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Supplier-scoped data connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--portal" data-kpi-orbit aria-label="Supplier Portal KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="M8 10h8M8 14h5"/></svg></span>
+                <strong>Portal</strong><small>Supplier live</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a"><strong class="kpi-orbit__value" th:text="${openOrderCount}">0</strong><span>Open POs</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b"><strong class="kpi-orbit__value" th:text="${#lists.size(terms)}">0</strong><span>Products Supplied</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${activeOfferCount}">0</strong><span>Active Offers</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d kpi-orbit__metric--text"><strong th:text="${latestPartnership != null ? latestPartnership.status : 'Not submitted'}">Not submitted</strong><span>Partnership</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Secure scope</strong><small>Only your supplier records</small></span></div>
+        </div>
+    </section>
+
+    <div class="row g-3">
+        <div class="col-xl-7">
+            <section class="table-card mb-3">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">Assigned Purchase Orders</h2>
+                        <p class="section-subtitle">Ownership is checked again on the server for every order detail and export route.</p>
+                    </div>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(orders)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>PO</th><th>Status</th><th>Created</th><th>Tracking</th><th class="text-end">Action</th></tr></thead>
+                        <tbody>
+                        <tr th:each="po : ${orders}">
+                            <td><span class="code-chip" th:text="${po.poCode}">PO</span></td>
+                            <td>
+                                <span class="status"
+                                      th:classappend="${po.status.name() == 'received'} ? ' status-green' : (${po.status.name() == 'partially_received'} ? ' status-purple' : (${po.status.name() == 'shipped'} ? ' status-blue' : ' status-amber'))"
+                                      th:text="${#strings.replace(po.status.name(),'_',' ')}">pending</span>
+                            </td>
+                            <td th:text="${#temporals.format(po.createdAt,'yyyy-MM-dd')}">date</td>
+                            <td th:text="${po.trackingReference != null ? po.trackingReference : 'Not submitted'}">—</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" th:href="@{/supplier-portal/orders/{id}(id=${po.poId})}">View</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(orders)}">
+                    <h3>No assigned purchase orders</h3>
+                    <p>Only orders assigned to this supplier account will appear here.</p>
+                </div>
+            </section>
+
+            <section class="table-card mb-3">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">30-Day Product Sales Velocity</h2>
+                        <p class="section-subtitle">Demand is calculated only for products linked to your supplier account.</p>
+                    </div>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(terms)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Product</th><th>Units Sold</th><th>Supply Price</th><th>MOQ</th><th>Lead Time</th></tr></thead>
+                        <tbody>
+                        <tr th:each="term,stat : ${terms}">
+                            <td class="fw-semibold" th:text="${term.product.name}">Product</td>
+                            <td th:text="${velocity[stat.index].unitsSoldLast30Days}">0</td>
+                            <td th:text="${#numbers.formatDecimal(term.price,1,2)}">0</td>
+                            <td th:text="${term.moq}">1</td>
+                            <td th:text="${term.leadTimeDays + ' days'}">3 days</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(terms)}">
+                    <h3>No linked products</h3>
+                    <p>Product supply terms will appear after Admin links products to the supplier.</p>
+                </div>
+            </section>
+
+            <section class="table-card">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">Offer History</h2>
+                        <p class="section-subtitle">Current unused offers can be deleted. Used or expired offers remain as procurement history.</p>
+                    </div>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(offers)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Valid Until</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+                        <tbody>
+                        <tr th:each="offer : ${offers}">
+                            <td th:text="${offer.product.name}">Product</td>
+                            <td th:text="${#numbers.formatDecimal(offer.price,1,2)}">0.00</td>
+                            <td th:text="${offer.quantity}">1</td>
+                            <td th:text="${offer.validUntil != null ? offer.validUntil : 'No expiry'}">No expiry</td>
+                            <td>
+                                <span th:if="${deletableOfferIds.contains(offer.offerId)}" class="status status-amber">Current / Unused</span>
+                                <span th:unless="${deletableOfferIds.contains(offer.offerId)}" class="status status-green">Preserved / Historical</span>
+                            </td>
+                            <td class="text-end">
+                                <form th:if="${deletableOfferIds.contains(offer.offerId)}"
+                                      method="post"
+                                      th:action="@{/supplier-portal/offers/{id}/delete(id=${offer.offerId})}"
+                                      data-confirm="Delete this unused supplier offer?"
+                                      data-confirm-title="Delete supplier offer"
+                                      data-confirm-tone="danger">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                </form>
+                                <span th:unless="${deletableOfferIds.contains(offer.offerId)}" class="small text-muted">Preserved</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(offers)}">
+                    <p>No offers submitted yet.</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-xl-5">
+            <section class="form-card mb-3" style="max-width:none">
+                <h2 class="section-title">Submit Restock / Bulk Offer</h2>
+                <p class="section-subtitle mb-3">Offers are restricted to products already linked to your supplier account.</p>
+                <form method="post" th:action="@{/supplier-portal/offers}">
+                    <div class="mb-3">
+                        <label class="form-label" for="offerProduct">Product</label>
+                        <select id="offerProduct" class="form-select" name="productId" required>
+                            <option value="" disabled selected>Select product</option>
+                            <option th:each="term : ${terms}" th:value="${term.product.productId}" th:text="${term.product.name}">Product</option>
+                        </select>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label" for="offerPrice">Unit Price</label>
+                            <input id="offerPrice" class="form-control" type="number" step="0.01" min="0.01" name="price" required/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="offerQty">Quantity</label>
+                            <input id="offerQty" class="form-control" type="number" min="1" name="quantity" required/>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label" for="validUntil">Valid Until</label>
+                        <input id="validUntil" class="form-control" type="date" name="validUntil"/>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Submit Offer</button>
+                </form>
+            </section>
+
+            <section class="form-card" style="max-width:none">
+                <h2 class="section-title">Partnership Request</h2>
+                <p class="section-subtitle mb-3">Upload a real PDF, CSV or XLSX product catalogue. Maximum size: 10 MB.</p>
+                <form method="post" enctype="multipart/form-data" th:action="@{/supplier-portal/partnership}">
+                    <div class="mb-3">
+                        <label class="form-label" for="contactPerson">Contact Person</label>
+                        <input id="contactPerson" class="form-control" name="contactPerson" maxlength="50" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="catalogFile">Product Catalogue</label>
+                        <input id="catalogFile" class="form-control" type="file" name="catalogFile"
+                               accept=".pdf,.csv,.xlsx,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required/>
+                        <div class="form-text">The server generates the stored filename; browser-supplied paths are never trusted.</div>
+                    </div>
+                    <button class="btn btn-outline-primary" type="submit">Upload &amp; Submit Request</button>
+                </form>
+
+                <hr class="my-4"/>
+                <h3 class="section-title mb-3">Request History</h3>
+                <div class="empty-state py-3" th:if="${#lists.isEmpty(partnerships)}"><p>No partnership requests submitted yet.</p></div>
+
+                <div class="portal-history-row d-block" th:each="request : ${partnerships}">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <span class="status"
+                                  th:classappend="${request.status.name() == 'approved'} ? ' status-green' : (${request.status.name() == 'rejected'} ? ' status-red' : ' status-amber')"
+                                  th:text="${request.status}">pending</span>
+                            <span class="small text-muted ms-2"
+                                  th:text="${request.catalogFilePath != null ? 'Catalogue attached' : 'No catalogue attached'}">Catalogue attached</span>
+                        </div>
+                        <small class="text-muted" th:text="${#temporals.format(request.submittedAt,'yyyy-MM-dd HH:mm')}">date</small>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-2" th:if="${request.status.name() == 'pending'}">
+                        <a th:if="${request.catalogFilePath != null}"
+                           class="btn btn-sm btn-outline-primary"
+                           th:href="@{/supplier-portal/partnerships/{id}/catalog(id=${request.requestId})}">Download Catalogue</a>
+
+                        <form th:if="${request.catalogFilePath != null}"
+                              method="post"
+                              th:action="@{/supplier-portal/partnerships/{id}/catalog/delete(id=${request.requestId})}"
+                              data-confirm="Remove this uploaded catalogue from the pending partnership request?"
+                              data-confirm-title="Remove catalogue"
+                              data-confirm-tone="danger">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Remove Catalogue</button>
+                        </form>
+
+                        <form method="post" enctype="multipart/form-data"
+                              th:action="@{/supplier-portal/partnerships/{id}/catalog/replace(id=${request.requestId})}"
+                              class="d-flex gap-1 align-items-center">
+                            <input class="form-control form-control-sm" type="file" name="catalogFile"
+                                   accept=".pdf,.csv,.xlsx,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required/>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Replace</button>
+                        </form>
+
+                        <form method="post"
+                              th:action="@{/supplier-portal/partnerships/{id}/withdraw(id=${request.requestId})}"
+                              data-confirm="Withdraw this partnership request? The pending request and catalogue will be removed."
+                              data-confirm-title="Withdraw partnership request"
+                              data-confirm-tone="danger">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Withdraw Request</button>
+                        </form>
+                    </div>
+                    <div class="small text-muted mt-2" th:unless="${request.status.name() == 'pending'}">
+                        Reviewed requests are preserved as partnership history.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script th:src="@{/js/app.js}"></script></body>
+</html>

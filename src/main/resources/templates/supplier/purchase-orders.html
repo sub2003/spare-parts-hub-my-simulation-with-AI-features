@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Purchase Orders', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Purchase Order Lifecycle</div>
+            <h1 class="page-title">Purchase Orders</h1>
+            <p class="page-subtitle mb-0">Track issued purchase orders from Pending through shipment and stock receipt.</p>
+        </div>
+        <div class="d-flex flex-column flex-sm-row gap-2 no-print">
+            <div class="search-box">
+                <input class="form-control" type="search" placeholder="Search orders..." data-table-search="poTable" aria-label="Search purchase orders"/>
+            </div>
+            <a class="btn btn-primary text-nowrap" th:href="@{/supplier/restock-requirements}">View Restock Requirements</a>
+        </div>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('orders')}"></th:block>
+
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(purchaseOrders)}">
+            <table class="table table-modern" id="poTable">
+                <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Supplier</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th class="text-end no-print">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="po : ${purchaseOrders}" data-search-row>
+                    <td><span class="code-chip" th:text="${po.poCode != null ? po.poCode : 'Draft'}">PO-000001</span></td>
+                    <td>
+                        <div class="fw-bold" th:text="${po.supplier.name}">Supplier</div>
+                        <div class="small text-muted" th:text="${po.supplier.email}">supplier@example.com</div>
+                    </td>
+                    <td>
+                        <div class="small" th:text="${po.createdAt != null ? po.createdAt : '—'}">—</div>
+                        <div class="small text-muted" th:text="${'By ' + po.createdBy.name}">By Admin</div>
+                    </td>
+                    <td><span th:class="${'status-pill status-' + po.status}" th:text="${#strings.replace(po.status.toString(), '_', ' ')}">pending</span></td>
+                    <td class="text-end no-print"><a class="btn btn-sm btn-outline-primary" th:href="@{/supplier/purchase-orders/{id}(id=${po.poId})}">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(purchaseOrders)}">
+            <div class="empty-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></div>
+            <h3 class="h6 text-dark">No purchase orders have been created yet</h3>
+            <p class="mb-3">Start with an approved restock requirement and compare supplier terms.</p>
+            <a class="btn btn-primary no-print" th:href="@{/supplier/restock-requirements}">View Restock Requirements</a>
+        </div>
+    </div>
+
+    <div class="status-guide" th:if="${!#lists.isEmpty(purchaseOrders)}">
+        <span>Status guide:</span>
+        <span class="status-pill status-pending">Pending</span>
+        <span class="status-pill status-shipped">Shipped</span>
+        <span class="status-pill status-partially_received">Partially Received</span>
+        <span class="status-pill status-received">Received</span>
+    </div>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

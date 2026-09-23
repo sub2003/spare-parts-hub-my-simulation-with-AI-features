@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Reports', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Reporting • Sales</div>
+            <h1 class="page-title">Sales Report</h1>
+            <p class="page-subtitle">Filter real Sale and SaleItem data, then export the exact same period to CSV or PDF.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/reporting}">Back to Reports</a>
+        </div>
+    </header>
+
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <section class="filter-bar mb-4">
+        <form method="get" th:action="@{/reporting/sales}" class="row g-2 w-100 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label" for="from">From Date</label>
+                <input id="from" class="form-control" type="date" name="from" th:value="${from}"/>
+                <div class="form-text">Blank = first recorded sale.</div>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label" for="to">To Date</label>
+                <input id="to" class="form-control" type="date" name="to" th:value="${to}"/>
+                <div class="form-text">Blank = today.</div>
+            </div>
+            <div class="col-6 col-md-2"><button class="btn btn-primary w-100" type="submit">Apply</button></div>
+            <div class="col-6 col-md-2"><a class="btn btn-light w-100" th:href="@{/reporting/sales}">Clear</a></div>
+            <div class="col-6 col-md-1" th:if="${error == null}"><a class="btn btn-outline-primary w-100" th:href="@{/reporting/sales/export.csv(from=${report.from},to=${report.to})}">CSV</a></div>
+            <div class="col-6 col-md-1" th:if="${error == null}"><a class="btn btn-outline-primary w-100" th:href="@{/reporting/sales/export.pdf(from=${report.from},to=${report.to})}">PDF</a></div>
+        </form>
+    </section>
+
+    <section class="mb-4" th:if="${error == null}">
+        <div class="metric-grid reporting-metric-grid-4">
+            <div class="metric-card metric-blue"><div class="metric-label">Sales</div><div class="metric-value" th:text="${report.saleCount}">0</div><div class="metric-note" th:text="${report.from + ' → ' + report.to}">period</div></div>
+            <div class="metric-card metric-green"><div class="metric-label">Revenue</div><div class="metric-value metric-money" th:text="${'LKR ' + #numbers.formatDecimal(report.totalRevenue,1,2)}">LKR 0.00</div><div class="metric-note">Sum of Sale amounts</div></div>
+            <div class="metric-card metric-purple"><div class="metric-label">Units Sold</div><div class="metric-value" th:text="${report.quantitySold}">0</div><div class="metric-note">Sum of SaleItem quantity</div></div>
+            <div class="metric-card metric-amber"><div class="metric-label">Average Sale</div><div class="metric-value metric-money" th:text="${'LKR ' + #numbers.formatDecimal(report.averageSaleValue,1,2)}">LKR 0.00</div><div class="metric-note">Revenue ÷ number of sales</div></div>
+        </div>
+    </section>
+
+    <div class="row g-3" th:if="${error == null}">
+        <div class="col-xl-8">
+            <section class="table-card">
+                <div class="table-card-header">
+                    <div><h2 class="section-title">Sales Transactions</h2><p class="section-subtitle" th:text="${report.from + ' to ' + report.to + ' • inclusive'}">Period</p></div>
+                    <span class="status status-blue" th:text="${report.saleCount + ' sales'}">0 sales</span>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(report.sales)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Sale</th><th>Date</th><th>Cashier</th><th class="text-end">Amount</th></tr></thead>
+                        <tbody>
+                        <tr th:each="s : ${report.sales}">
+                            <td><span class="code-chip" th:text="${s.saleCode}">SALE-000001</span></td>
+                            <td th:text="${#temporals.format(s.soldAt,'yyyy-MM-dd HH:mm')}">date</td>
+                            <td th:text="${s.soldBy.name}">Cashier</td>
+                            <td class="text-end fw-semibold" th:text="${'LKR ' + #numbers.formatDecimal(s.amount,1,2)}">LKR 0.00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(report.sales)}"><h3>No sales in this period</h3><p>Choose another date range or complete a Sale.</p></div>
+            </section>
+        </div>
+
+        <div class="col-xl-4">
+            <section class="table-card">
+                <div class="table-card-header"><div><h2 class="section-title">Top Products</h2><p class="section-subtitle">Real unit sales and revenue.</p></div></div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(report.topProducts)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Product</th><th>Qty</th><th class="text-end">Revenue</th></tr></thead>
+                        <tbody>
+                        <tr th:each="r : ${report.topProducts}">
+                            <td class="fw-semibold" th:text="${r.name}">Product</td>
+                            <td th:text="${r.quantity}">0</td>
+                            <td class="text-end" th:text="${'LKR ' + #numbers.formatDecimal(r.revenue,1,2)}">LKR 0.00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(report.topProducts)}"><h3>No ranking yet</h3><p>No SaleItems exist in this period.</p></div>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

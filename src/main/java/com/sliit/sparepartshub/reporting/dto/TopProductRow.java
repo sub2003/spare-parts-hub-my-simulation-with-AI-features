@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.reporting.dto;import java.math.BigDecimal;public class TopProductRow{private String name;private long quantity;private BigDecimal revenue;public TopProductRow(String n,long q,BigDecimal r){name=n;quantity=q;revenue=r;}public String getName(){return name;}public long getQuantity(){return quantity;}public BigDecimal getRevenue(){return revenue;}}

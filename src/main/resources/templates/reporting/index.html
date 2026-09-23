@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Reports', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Function 6 • Admin Analytics</div>
+            <h1 class="page-title">Reports & Audit</h1>
+            <p class="page-subtitle">Real sales performance, stock risk, warranty workload and traceable administrative activity.</p>
+        </div>
+        <div class="page-actions d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" th:href="@{/reporting/sales}">Sales Report</a>
+            <a class="btn btn-outline-primary" th:href="@{/reporting/audit}">Audit Log</a>
+            <a class="btn btn-outline-primary" th:href="@{/reporting/anomalies}">Anomalies</a>
+            <a class="btn btn-light" th:href="@{/reporting/staff}">Staff Accounts</a>
+        </div>
+    </header>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--reporting" aria-labelledby="reports-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Operational intelligence</div>
+            <h2 id="reports-orbit-title" class="kpi-orbit-title">Insights Workspace</h2>
+            <p>Sales scale, units, critical inventory and procurement workload summarized from real reporting data.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Reporting snapshot connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--reporting" data-kpi-orbit aria-label="Reporting KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 20V10M12 20V4M19 20v-7"/><path d="M3 20h18"/></svg></span>
+                <strong>Insights</strong><small>Reports live</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a"><strong class="kpi-orbit__value" th:text="${summary.totalSales}">0</strong><span>All Sales</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b"><strong class="kpi-orbit__value" th:text="${summary.totalQuantitySold}">0</strong><span>Units Sold</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c kpi-orbit__metric--danger"><strong class="kpi-orbit__value" th:text="${summary.criticalProducts}">0</strong><span>Critical Products</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d"><strong class="kpi-orbit__value" th:text="${summary.openPos}">0</strong><span>Open POs</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Reports live</strong><small>Admin analytics snapshot</small></span></div>
+        </div>
+    </section>
+
+    <section class="mb-4" aria-label="Reporting secondary metrics">
+        <div class="metric-grid reporting-metric-grid reporting-metric-grid--secondary">
+            <div class="metric-card metric-green">
+                <div class="metric-head">
+                    <div><div class="metric-label">Total Revenue</div><div class="metric-value metric-money" th:text="${'LKR ' + #numbers.formatDecimal(summary.totalRevenue,1,2)}">LKR 0.00</div></div>
+                    <span class="metric-icon" aria-hidden="true">↗</span>
+                </div>
+                <div class="metric-note">Historical revenue from Sale records</div>
+            </div>
+            <div class="metric-card metric-amber">
+                <div class="metric-head">
+                    <div><div class="metric-label">Open RMAs</div><div class="metric-value" th:text="${summary.pendingRmas}">0</div></div>
+                    <span class="metric-icon" aria-hidden="true">R</span>
+                </div>
+                <div class="metric-note">Pending or approved warranty claims</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="ai-demand-forecast" class="ai-forecast-section mb-4" aria-labelledby="ai-forecast-title">
+        <div class="ai-forecast-shell" th:classappend="${aiForecast != null and aiForecast.available} ? ' ai-forecast-shell--active' : ' ai-forecast-shell--offline'">
+            <div class="ai-forecast-head">
+                <div>
+                    <div class="ai-forecast-kicker"><span class="ai-live-dot" aria-hidden="true"></span> AI Future Insights</div>
+                    <h2 id="ai-forecast-title" class="section-title mb-1">AI Demand Forecast</h2>
+                    <p class="section-subtitle mb-0">Future product demand for the next 7 and 30 days, separate from the current deterministic urgency score.</p>
+                </div>
+                <div class="ai-forecast-actions">
+                    <span class="status status-green" th:if="${aiForecast != null and aiForecast.available and aiForecast.model.status == 'ACTIVE'}">AI Active</span>
+                    <span class="status status-warning" th:if="${aiForecast != null and aiForecast.available and aiForecast.model.status == 'TRAINING'}">Training candidate</span>
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/reporting#ai-demand-forecast}">Refresh Forecast</a>
+                    <form th:action="@{/reporting/ai/retrain}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-primary" data-loading-text="Starting training…">Retrain Model</button>
+                    </form>
+                </div>
+            </div>
+
+            <div th:if="${aiForecast != null and aiForecast.available}">
+                <div class="ai-model-strip">
+                    <div><span>Model</span><strong th:text="${aiForecast.model.version + ' · ' + aiForecast.model.modelType}">v1 · RandomForestRegressor</strong></div>
+                    <div><span>Last trained</span><strong th:text="${aiForecast.model.trainedAt}">date</strong></div>
+                    <div><span>Training rows</span><strong th:text="${aiForecast.model.trainingRows}">0</strong></div>
+                    <div><span>Synthetic / Real</span><strong th:text="${aiForecast.model.syntheticRows + ' / ' + aiForecast.model.realRows}">0 / 0</strong></div>
+                    <div><span>7d MAE / RMSE</span><strong th:text="${#numbers.formatDecimal(aiForecast.model.mae7,1,2) + ' / ' + #numbers.formatDecimal(aiForecast.model.rmse7,1,2)}">0 / 0</strong></div>
+                    <div><span>30d MAE / RMSE</span><strong th:text="${#numbers.formatDecimal(aiForecast.model.mae30,1,2) + ' / ' + #numbers.formatDecimal(aiForecast.model.rmse30,1,2)}">0 / 0</strong></div>
+                </div>
+
+                <div class="ai-demo-disclosure">
+                    <span aria-hidden="true">ⓘ</span>
+                    <span><strong>Demo model:</strong> Initial historical training data is synthetically generated. New real POS sales are incorporated during retraining.</span>
+                </div>
+
+                <div class="row g-3 mt-1" th:if="${aiForecast.featured != null}">
+                    <div class="col-xl-4">
+                        <article class="ai-featured-card h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <div class="ai-featured-label">Highest 30-day forecast</div>
+                                    <h3 th:text="${aiForecast.featured.productName}">Product</h3>
+                                    <div class="small text-muted" th:text="${aiForecast.featured.productCode + ' · ' + aiForecast.featured.category}">CODE · Category</div>
+                                </div>
+                                <span class="status"
+                                      th:classappend="${aiForecast.featured.isRising()} ? ' status-green' : (${aiForecast.featured.isFalling()} ? ' status-warning' : ' status-blue')"
+                                      th:text="${aiForecast.featured.trend}">RISING</span>
+                            </div>
+                            <div class="ai-featured-grid">
+                                <div><span>Next 7 days</span><strong th:text="${aiForecast.featured.forecast7Days + ' units'}">0 units</strong></div>
+                                <div><span>Next 30 days</span><strong th:text="${aiForecast.featured.forecast30Days + ' units'}">0 units</strong></div>
+                                <div><span>Current stock</span><strong th:text="${aiForecast.featured.currentStock}">0</strong></div>
+                                <div><span>Potential shortage*</span><strong th:classappend="${aiForecast.featured.hasShortageRisk()} ? ' text-danger' : ' text-success'" th:text="${aiForecast.featured.potentialShortage30Days}">0</strong></div>
+                            </div>
+                            <p class="ai-shortage-note">*Simple forecast minus current stock, before incoming purchase orders.</p>
+                        </article>
+                    </div>
+                    <div class="col-xl-8">
+                        <article class="ai-chart-card h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <div class="ai-featured-label">Demand pattern</div>
+                                    <h3 class="h6 mb-0">Last 30 days → predicted daily average</h3>
+                                </div>
+                                <div class="ai-chart-legend"><span><i class="actual"></i> Historical</span><span><i class="predicted"></i> Predicted avg.</span></div>
+                            </div>
+                            <div class="ai-demand-chart"
+                                 role="img"
+                                 th:attr="aria-label=${'Demand chart for ' + aiForecast.featured.productName},data-ai-history=${aiForecast.featured.historyCsv},data-ai-forecast=${aiForecast.featured.forecast30DailyAverage}">
+                                <svg viewBox="0 0 720 230" preserveAspectRatio="none" aria-hidden="true">
+                                    <line class="ai-chart-axis" x1="34" y1="198" x2="700" y2="198"></line>
+                                    <line class="ai-chart-axis" x1="34" y1="20" x2="34" y2="198"></line>
+                                    <path class="ai-chart-history-path" d=""></path>
+                                    <path class="ai-chart-forecast-path" d=""></path>
+                                    <circle class="ai-chart-split" cx="0" cy="0" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="ai-chart-caption"><span>Historical daily units</span><span>Future dashed section = model's 30-day daily average</span></div>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="table-card ai-forecast-table mt-3">
+                    <div class="table-card-header">
+                        <div>
+                            <h3 class="section-title">Future Product Demand</h3>
+                            <p class="section-subtitle">Product-level forecasts use sufficient product history; new products may use a labelled category fallback.</p>
+                        </div>
+                        <span class="small text-muted" th:if="${aiForecast.model.nextRetraining != null}" th:text="${'Next scheduled retraining: ' + aiForecast.model.nextRetraining}">Next training</span>
+                    </div>
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(aiForecast.forecasts)}">
+                        <table class="table align-middle">
+                            <thead><tr><th>Product</th><th>Next 7d</th><th>Next 30d</th><th>Trend</th><th>Stock</th><th>Potential shortage*</th><th>Scope</th></tr></thead>
+                            <tbody>
+                            <tr th:each="forecast : ${aiForecast.forecasts}">
+                                <td><div class="fw-semibold" th:text="${forecast.productName}">Product</div><div class="small text-muted" th:text="${forecast.productCode}">CODE</div></td>
+                                <td><strong th:text="${forecast.forecast7Days}">0</strong> units</td>
+                                <td><strong th:text="${forecast.forecast30Days}">0</strong> units</td>
+                                <td><span class="status" th:classappend="${forecast.isRising()} ? ' status-green' : (${forecast.isFalling()} ? ' status-warning' : ' status-blue')" th:text="${forecast.trend}">STABLE</span></td>
+                                <td th:text="${forecast.currentStock}">0</td>
+                                <td><span class="fw-semibold" th:classappend="${forecast.hasShortageRisk()} ? ' text-danger' : ' text-success'" th:text="${forecast.potentialShortage30Days}">0</span></td>
+                                <td><span class="status status-blue" th:text="${forecast.scope == 'CATEGORY_FALLBACK' ? 'Category fallback' : 'Product model'}">Product model</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-unavailable-card" th:if="${aiForecast == null or !aiForecast.available}">
+                <div class="ai-unavailable-icon" aria-hidden="true">AI</div>
+                <div>
+                    <h3>AI forecasting temporarily unavailable</h3>
+                    <p th:text="${aiForecast != null ? aiForecast.message : 'Forecast service is not available.'}">Forecast service is not available.</p>
+                    <p class="small text-muted mb-0">The core Reports page remains fully functional. Start the local FastAPI service in the project's <code>ai</code> folder to enable forecasts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-7">
+            <section class="table-card h-100">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">Top Products • Last 7 Days</h2>
+                        <p class="section-subtitle">Ranked from actual SaleItem quantities and revenue.</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/reporting/sales}">Open report</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(topProducts)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Product</th><th>Units</th><th class="text-end">Revenue</th></tr></thead>
+                        <tbody>
+                        <tr th:each="row : ${topProducts}">
+                            <td class="fw-semibold" th:text="${row.name}">Product</td>
+                            <td th:text="${row.quantity}">0</td>
+                            <td class="text-end fw-semibold" th:text="${'LKR ' + #numbers.formatDecimal(row.revenue,1,2)}">LKR 0.00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(topProducts)}">
+                    <h3>No sales in the last seven days</h3>
+                    <p>Product ranking will appear after Sales/POS records transactions.</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-xl-5">
+            <section class="table-card h-100">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">Critical Stock</h2>
+                        <p class="section-subtitle">Current risk snapshot from Function 3.</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/stockmonitoring}">Urgency</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(criticalProducts)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Product</th><th>Stock</th><th>Urgency</th></tr></thead>
+                        <tbody>
+                        <tr th:each="product : ${criticalProducts}">
+                            <td>
+                                <div class="fw-semibold" th:text="${product.name}">Product</div>
+                                <div class="small text-muted" th:text="${product.productCode}">CODE</div>
+                            </td>
+                            <td th:text="${product.stockCount}">0</td>
+                            <td><span class="status status-critical" th:text="${product.urgencyScore + ' / 100'}">90 / 100</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(criticalProducts)}">
+                    <h3>No critical products</h3>
+                    <p>No current product has urgency score 70 or higher.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-5">
+            <section class="table-card h-100">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">Recent Purchase Orders</h2>
+                        <p class="section-subtitle">Latest supplier activity.</p>
+                    </div>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(recentPos)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>PO</th><th>Supplier</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="po : ${recentPos}">
+                            <td><span class="code-chip" th:text="${po.poCode}">PO-000001</span></td>
+                            <td th:text="${po.supplier.name}">Supplier</td>
+                            <td><span class="status status-blue" th:text="${po.status}">pending</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(recentPos)}">
+                    <h3>No purchase orders</h3><p>Supplier purchase orders will appear here.</p>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-7">
+            <section class="table-card h-100">
+                <div class="table-card-header">
+                    <div>
+                        <h2 class="section-title">Recent Audit Activity</h2>
+                        <p class="section-subtitle">Immutable changes plus persistent review state.</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/reporting/audit}">View all</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(audits)}">
+                    <table class="table align-middle">
+                        <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Review</th></tr></thead>
+                        <tbody>
+                        <tr th:each="row : ${audits}">
+                            <td th:text="${#temporals.format(row.audit.loggedAt,'MM-dd HH:mm')}">time</td>
+                            <td th:text="${row.audit.user != null ? row.audit.user.name : 'System'}">User</td>
+                            <td><a class="text-decoration-none fw-semibold" th:href="@{/reporting/audit/{id}(id=${row.audit.logId})}" th:text="${row.audit.actionType}">ACTION</a></td>
+                            <td>
+                                <span class="status" th:classappend="${row.reviewStatus == 'unreviewed'} ? ' status-pending' : ' status-green'" th:text="${row.reviewStatus}">unreviewed</span>
+                                <span class="status status-red ms-1" th:if="${row.anomaly}">flag</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Explainable Anomalies • Last 7 Days</h2>
+                <p class="section-subtitle">Deterministic rules only — no AI or ML.</p>
+            </div>
+            <a class="btn btn-sm btn-outline-primary" th:href="@{/reporting/anomalies}">Open anomaly review</a>
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(anomalies)}">
+            <table class="table align-middle">
+                <thead><tr><th>Rule</th><th>Severity</th><th>Actor</th><th>Evidence</th></tr></thead>
+                <tbody>
+                <tr th:each="a : ${anomalies}">
+                    <td><div class="fw-semibold" th:text="${a.type}">RULE</div><div class="small text-muted" th:text="${a.explanation}">Explanation</div></td>
+                    <td><span class="status" th:classappend="${a.severity == 'critical'} ? ' status-critical' : ' status-warning'" th:text="${a.severity}">warning</span></td>
+                    <td th:text="${a.actor}">Actor</td>
+                    <td class="small" th:text="${a.evidence}">Evidence</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(anomalies)}">
+            <h3>No anomalies detected</h3>
+            <p>No deterministic anomaly rule was triggered in the last seven days.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.sales.repository; import com.sliit.sparepartshub.entity.PickTicket;import org.springframework.data.jpa.repository.JpaRepository; public interface SalesPickTicketRepository extends JpaRepository<PickTicket,Integer>{ PickTicket findFirstBySale_SaleId(Integer saleId); }

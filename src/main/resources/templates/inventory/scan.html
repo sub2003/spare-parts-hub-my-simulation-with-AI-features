@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Scan Pick Ticket', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Inventory • QR / Ticket Lookup</div>
+            <h1 class="page-title">Find Pick Ticket</h1>
+            <p class="page-subtitle">Upload or capture a QR image, or use the ticket code as a manual fallback.</p>
+        </div>
+        <div class="page-actions"><a class="btn btn-light" th:href="@{/inventory/pick-tickets}">Back to Queue</a></div>
+    </header>
+
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <section class="form-card h-100">
+                <div class="mb-4"><div class="eyebrow">Preferred</div><h2 class="section-title mt-2">Scan QR Image</h2><p class="section-subtitle">On a phone, the file picker can open the rear camera.</p></div>
+                <form method="post" enctype="multipart/form-data" th:action="@{/inventory/pick-tickets/scan}">
+                    <label class="form-label" for="qrImage">QR image</label>
+                    <input id="qrImage" class="form-control" type="file" name="qrImage" accept="image/*" capture="environment" required/>
+                    <button class="btn btn-primary mt-3" type="submit">Read QR & Open Ticket</button>
+                </form>
+            </section>
+        </div>
+        <div class="col-lg-6">
+            <section class="form-card h-100">
+                <div class="mb-4"><div class="eyebrow">Fallback</div><h2 class="section-title mt-2">Enter Ticket Code</h2><p class="section-subtitle">Example: PICK-000001</p></div>
+                <form method="get" th:action="@{/inventory/pick-tickets/scan}">
+                    <label class="form-label" for="code">Pick ticket code</label>
+                    <div class="input-group">
+                        <input id="code" class="form-control" name="code" placeholder="PICK-000001" autocomplete="off" required/>
+                        <button class="btn btn-outline-primary" type="submit">Find Ticket</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

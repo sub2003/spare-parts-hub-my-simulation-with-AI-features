@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Purchase Order', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header no-print">
+        <div>
+            <div class="page-kicker">Purchase Order</div>
+            <h1 class="page-title mb-0" th:text="${po.poCode}">PO-000001</h1>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" th:href="@{/supplier/purchase-orders}">Back to Orders</a>
+            <a class="btn btn-outline-primary" th:href="@{/supplier/purchase-orders/{id}/export.csv(id=${po.poId})}">Export CSV</a>
+            <button class="btn btn-outline-secondary" type="button" onclick="window.print()">Print / Save PDF</button>
+            <form th:if="${po.status.name() == 'pending'}" th:action="@{/supplier/purchase-orders/{id}/ship(id=${po.poId})}" method="post"
+                  data-confirm="Mark this purchase order as shipped?" class="d-flex gap-2">
+                <input class="form-control" style="width:180px" type="date" name="expectedDeliveryDate" title="Expected delivery date"/>
+                <button class="btn btn-primary" type="submit">Mark as Shipped</button>
+            </form>
+            <a th:if="${po.status.name() == 'shipped' or po.status.name() == 'partially_received'}"
+               class="btn btn-success" th:href="@{/supplier/purchase-orders/{id}/receive(id=${po.poId})}">Receive Shipment</a>
+        </div>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('orders')}"></th:block>
+
+    <section class="lifecycle no-print" aria-label="Purchase order lifecycle">
+        <div class="lifecycle-step is-complete">
+            <span class="lifecycle-dot">✓</span>
+            <span class="lifecycle-copy"><strong>Created</strong><span>Purchase order issued</span></span>
+        </div>
+        <div class="lifecycle-step"
+             th:classappend="${po.status.name() == 'pending'} ? ' is-current' : ' is-complete'">
+            <span class="lifecycle-dot" th:text="${po.status.name() == 'pending' ? '2' : '✓'}">2</span>
+            <span class="lifecycle-copy"><strong>Shipped</strong><span>Supplier dispatch confirmed</span></span>
+        </div>
+        <div class="lifecycle-step"
+             th:classappend="${po.status.name() == 'shipped'} ? ' is-current' : (${po.status.name() == 'partially_received' or po.status.name() == 'received'} ? ' is-complete' : '')">
+            <span class="lifecycle-dot" th:text="${po.status.name() == 'partially_received' or po.status.name() == 'received' ? '✓' : '3'}">3</span>
+            <span class="lifecycle-copy"><strong>Receiving</strong><span>Physical stock checked in</span></span>
+        </div>
+        <div class="lifecycle-step"
+             th:classappend="${po.status.name() == 'received'} ? ' is-complete' : (${po.status.name() == 'partially_received'} ? ' is-current' : '')">
+            <span class="lifecycle-dot" th:text="${po.status.name() == 'received' ? '✓' : '4'}">4</span>
+            <span class="lifecycle-copy"><strong>Received</strong><span>Inventory fully updated</span></span>
+        </div>
+    </section>
+
+    <article class="po-document">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-4 mb-4">
+            <div class="po-brand">
+                <img th:src="@{/images/spare-parts-hub-logo.svg}" src="/images/spare-parts-hub-logo.svg" alt="Spare Parts Hub"/>
+            </div>
+            <div class="text-md-end">
+                <div class="code-chip mb-2" th:text="${po.poCode}">PO-000001</div><br/>
+                <span th:class="${'status-pill status-' + po.status}" th:text="${#strings.replace(po.status.toString(), '_', ' ')}">pending</span>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="metric-label mb-2">Supplier</div>
+                <div class="fw-bold fs-5" th:text="${po.supplier.name}">Supplier Name</div>
+                <div class="text-muted" th:text="${po.supplier.email}">supplier@example.com</div>
+                <div class="text-muted" th:text="${po.supplier.contact}">Contact</div>
+                <div class="mt-2" th:if="${po.supplier.supplierCode != null}"><span class="code-chip" th:text="${po.supplier.supplierCode}">SUP-001</span></div>
+            </div>
+            <div class="col-md-6">
+                <dl class="row po-meta mb-0">
+                    <dt class="col-5">Created by</dt><dd class="col-7" th:text="${po.createdBy.name}">Admin</dd>
+                    <dt class="col-5">Created at</dt><dd class="col-7" th:text="${po.createdAt != null ? po.createdAt : '—'}">—</dd>
+                    <dt class="col-5">Shipped at</dt><dd class="col-7" th:text="${po.shippedAt != null ? po.shippedAt : 'Not shipped'}">Not shipped</dd>
+                    <dt class="col-5">Expected delivery</dt><dd class="col-7" th:text="${po.expectedDeliveryDate != null ? po.expectedDeliveryDate : 'Not set'}">Not set</dd>
+                    <dt class="col-5">Supplier dispatch</dt><dd class="col-7" th:text="${po.supplierDispatchedAt != null ? po.supplierDispatchedAt : 'Not submitted'}">Not submitted</dd>
+                    <dt class="col-5">Tracking reference</dt><dd class="col-7" th:text="${po.trackingReference != null ? po.trackingReference : 'Not submitted'}">Not submitted</dd>
+                    <dt class="col-5">Received at</dt><dd class="col-7" th:text="${po.receivedAt != null ? po.receivedAt : 'Not received'}">Not received</dd>
+                </dl>
+            </div>
+        </div>
+
+
+        <div class="info-box mt-3" th:if="${po.supplierShipmentNote != null}">
+            <strong>Supplier shipment note:</strong> <span th:text="${po.supplierShipmentNote}">Shipment note</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-modern border">
+                <thead><tr><th>#</th><th>Product</th><th class="text-end">Ordered</th><th class="text-end">Received</th><th class="text-end">Unit Price</th><th class="text-end">Line Total</th></tr></thead>
+                <tbody>
+                <tr th:each="item, iter : ${items}">
+                    <td th:text="${iter.count}">1</td>
+                    <td>
+                        <div class="fw-bold" th:text="${item.product.name}">Product</div>
+                        <div class="small text-muted"><span th:text="${item.product.brand}">Brand</span><span> · </span><span th:text="${item.product.category}">Category</span><span th:if="${item.product.productCode != null}"> · </span><span th:if="${item.product.productCode != null}" th:text="${item.product.productCode}">Code</span></div>
+                    </td>
+                    <td class="text-end" th:text="${item.quantityOrdered}">1</td>
+                    <td class="text-end" th:text="${item.receivedQuantity}">0</td>
+                    <td class="text-end money" th:text="${#numbers.formatDecimal(item.priceAgreed,1,2)}">0.00</td>
+                    <td class="text-end money" th:text="${#numbers.formatDecimal(item.priceAgreed * item.quantityOrdered,1,2)}">0.00</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row justify-content-end mt-3">
+            <div class="col-md-5 col-lg-4">
+                <div class="total-box"><div class="d-flex justify-content-between align-items-center"><span class="fw-bold">Total</span><span class="grand-total money" th:text="${#numbers.formatDecimal(total,1,2)}">0.00</span></div></div>
+            </div>
+        </div>
+
+        <div class="note-box mt-4 no-print" th:if="${po.status.name() == 'partially_received'}">
+            This order is partially received. Record only physical units that have not already been received to avoid double-counting stock.
+        </div>
+    </article>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+</main>
+</body>
+</html>

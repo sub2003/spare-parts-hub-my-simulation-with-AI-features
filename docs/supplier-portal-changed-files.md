@@ -1,0 +1,33 @@
+# Supplier Portal Integration — exact changed/new files
+
+- `.gitignore`
+- `database/patch-supplier-portal-demo-data.sql`
+- `database/patch-supplier-portal-integration.sql`
+- `database/schema-simulation.sql`
+- `database/simulation-seed.sql`
+- `docs/simulation-credentials.md`
+- `docs/supplier-portal-changed-files.md`
+- `docs/supplier-portal-routes.md`
+- `docs/supplier-portal-subset-verification.md`
+- `src/main/java/com/sliit/sparepartshub/entity/PartnershipRequest.java`
+- `src/main/java/com/sliit/sparepartshub/entity/PurchaseOrder.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/controller/SupplierPortalController.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/repository/PortalPartnershipRepository.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/repository/ReportingPurchaseOrderRepository.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/repository/SupplierRepository.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/security/ActiveSupplierFilter.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/security/SupplierSecurityConfig.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/service/CatalogStorageService.java`
+- `src/main/java/com/sliit/sparepartshub/reporting/service/SupplierPortalService.java`
+- `src/main/java/com/sliit/sparepartshub/supplier/controller/SupplierController.java`
+- `src/main/java/com/sliit/sparepartshub/supplier/repository/PartnershipRequestRepository.java`
+- `src/main/java/com/sliit/sparepartshub/supplier/service/SupplierManagementService.java`
+- `src/main/resources/application.properties.example`
+- `src/main/resources/static/css/supplier-portal.css`
+- `src/main/resources/templates/supplier/partnership-requests.html`
+- `src/main/resources/templates/supplier/purchase-order-detail.html`
+- `src/main/resources/templates/supplier-portal/dashboard.html`
+- `src/main/resources/templates/supplier-portal/login.html`
+- `src/main/resources/templates/supplier-portal/order.html`
+- `src/main/resources/templates/supplier-portal/password.html`
+- `src/main/resources/templates/supplier-portal/profile.html`

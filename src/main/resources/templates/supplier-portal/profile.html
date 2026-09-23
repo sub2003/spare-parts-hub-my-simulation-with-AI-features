@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Supplier Profile - Spare Parts Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/app-shell.css}"/>
+    <link rel="stylesheet" th:href="@{/css/supplier-portal.css}"/>
+</head>
+<body class="portal-body">
+<nav class="portal-nav"><div class="portal-nav-inner">
+    <div class="portal-brand-wrap"><img th:src="@{/images/spare-parts-hub-logo.svg}" alt="Spare Parts Hub"/><span class="portal-label">Supplier Portal</span></div>
+    <div class="d-flex gap-2"><a class="btn btn-sm btn-light" th:href="@{/supplier-portal/dashboard}">Dashboard</a><form th:action="@{/supplier-portal/logout}" method="post"><button class="btn btn-sm btn-outline-primary" type="submit">Logout</button></form></div>
+</div></nav>
+<main class="portal-page">
+    <header class="page-head"><div><div class="eyebrow">Supplier Account</div><h1 class="page-title">Profile</h1><p class="page-subtitle">Update your own contact information. Supplier code and account status remain protected.</p></div><a class="btn btn-outline-primary" th:href="@{/supplier-portal/profile/password}">Change Password</a></header>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div><div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <section class="form-card" style="max-width:780px"><form method="post" th:action="@{/supplier-portal/profile}">
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Supplier Code</label><input class="form-control" th:value="${supplier.supplierCode}" disabled/></div>
+            <div class="col-md-6"><label class="form-label">Status</label><input class="form-control" th:value="${supplier.active ? 'Active' : 'Inactive'}" disabled/></div>
+            <div class="col-12"><label class="form-label" for="supplierName">Supplier Name</label><input id="supplierName" class="form-control" name="name" maxlength="50" th:value="${supplier.name}" required/></div>
+            <div class="col-md-7"><label class="form-label" for="supplierEmail">Email</label><input id="supplierEmail" class="form-control" type="email" name="email" maxlength="254" th:value="${supplier.email}" required/></div>
+            <div class="col-md-5"><label class="form-label" for="supplierContact">Contact</label><input id="supplierContact" class="form-control" name="contact" maxlength="20" th:value="${supplier.contact}" required/></div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-light" th:href="@{/supplier-portal/dashboard}">Cancel</a><button class="btn btn-primary" type="submit">Save Profile</button></div>
+    </form></section>
+</main><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script th:src="@{/js/app.js}"></script></body></html>

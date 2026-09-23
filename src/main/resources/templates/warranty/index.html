@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Warranty / RMA', content=~{::main})}">
+<body>
+<main class="page-wrap module-warranty">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Function 4 • Operations</div>
+            <h1 class="page-title">Warranty & Returns</h1>
+            <p class="page-subtitle">Validate a sold serial, calculate warranty eligibility and manage each RMA through review and resolution.</p>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--warranty" aria-labelledby="warranty-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Warranty lifecycle</div>
+            <h2 id="warranty-orbit-title" class="kpi-orbit-title">RMA Workspace</h2>
+            <p>Review load, unresolved approvals and today's warranty activity remain visible around the claim lifecycle.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Warranty workflow connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--warranty" data-kpi-orbit aria-label="Warranty and RMA KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 19 6v5c0 4.6-2.9 8.1-7 10-4.1-1.9-7-5.4-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                <strong>RMA</strong><small>Claim lifecycle</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a kpi-orbit__metric--alert"><strong class="kpi-orbit__value" th:text="${pendingCount}">0</strong><span>Pending Review</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b"><strong class="kpi-orbit__value" th:text="${approvedCount}">0</strong><span>Approved Open</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${todayCount}">0</strong><span>Opened Today</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d"><strong class="kpi-orbit__value" th:text="${#lists.size(claims)}">0</strong><span>Visible Claims</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Warranty live</strong><small>Eligibility and resolution flow</small></span></div>
+        </div>
+    </section>
+
+    <section class="form-card mb-4" style="max-width:none">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Serial Number Lookup</h2>
+                <p class="section-subtitle">The server checks the original sale, warranty period, current serial state and open RMA status.</p>
+            </div>
+        </div>
+
+        <form method="get" th:action="@{/warranty}" class="row g-2">
+            <div class="col-12 col-lg-10">
+                <label class="form-label" for="serial">Serial Number</label>
+                <input id="serial"
+                       class="form-control"
+                       name="serial"
+                       th:value="${param.serial}"
+                       placeholder="e.g. SSD-DEMO-001"
+                       maxlength="50"
+                       autocomplete="off"
+                       data-autofocus
+                       required/>
+            </div>
+            <div class="col-12 col-lg-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100" type="submit">Check Warranty</button>
+            </div>
+        </form>
+    </section>
+
+    <section th:if="${lookup}" class="detail-card mb-4">
+        <div class="section-header">
+            <div>
+                <div class="eyebrow">Warranty Result</div>
+                <h2 class="page-title h3 mb-1" th:text="${lookup.serial.product.name}">Product</h2>
+                <p class="section-subtitle">Serial <strong th:text="${lookup.serial.serialValue}">SERIAL</strong></p>
+            </div>
+            <span class="status"
+                  th:classappend="${lookup.status == 'In Warranty'} ? ' status-green' : (${lookup.status == 'RMA Open'} ? ' status-blue' : ' status-red')"
+                  th:text="${lookup.status}">In Warranty</span>
+        </div>
+
+        <div class="alert"
+             th:classappend="${lookup.eligible} ? ' alert-success' : ' alert-warning'"
+             th:text="${lookup.eligibilityMessage}">Eligibility message</div>
+
+        <div class="detail-grid mb-4">
+            <div class="detail-item">
+                <div class="detail-label">Product Code</div>
+                <div class="detail-value" th:text="${lookup.serial.product.productCode}">CODE</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Serial Status</div>
+                <div class="detail-value text-capitalize"
+                     th:text="${#strings.replace(lookup.serial.currentStatus.name(),'_',' ')}">sold</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Original Sale</div>
+                <div class="detail-value" th:text="${lookup.serial.sale != null ? lookup.serial.sale.saleCode : 'Not linked'}">SALE</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Sold Date</div>
+                <div class="detail-value"
+                     th:text="${lookup.serial.sale != null and lookup.serial.sale.soldAt != null ? #temporals.format(lookup.serial.sale.soldAt,'yyyy-MM-dd HH:mm') : 'N/A'}">N/A</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Warranty Period</div>
+                <div class="detail-value"
+                     th:text="${lookup.serial.product.warrantyPeriodMonths != null ? lookup.serial.product.warrantyPeriodMonths + ' months' : 'Not configured'}">36 months</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Warranty Expiry</div>
+                <div class="detail-value" th:text="${lookup.expiry != null ? lookup.expiry : 'N/A'}">N/A</div>
+            </div>
+        </div>
+
+        <div th:if="${lookup.openClaim != null}" class="mb-4">
+            <a class="btn btn-outline-primary"
+               th:href="@{/warranty/rmas/{id}(id=${lookup.openClaim.claimId})}">
+                Open Existing RMA <span th:text="${lookup.openClaim.claimCode}">RMA-000001</span>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <h3 class="section-title mb-3">Serial RMA History</h3>
+                <div class="table-responsive" th:if="${history != null and !#lists.isEmpty(history)}">
+                    <table class="table align-middle">
+                        <thead>
+                        <tr>
+                            <th>RMA</th>
+                            <th>Opened</th>
+                            <th>Status</th>
+                            <th>Resolution</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="h : ${history}">
+                            <td><span class="code-chip" th:text="${h.claimCode}">RMA-000001</span></td>
+                            <td th:text="${h.createdAt != null ? #temporals.format(h.createdAt,'yyyy-MM-dd HH:mm') : h.claimDate}">date</td>
+                            <td>
+                                <span class="status"
+                                      th:classappend="${h.claimStatus.name() == 'pending'} ? ' status-amber' : (${h.claimStatus.name() == 'approved'} ? ' status-blue' : (${h.claimStatus.name() == 'rejected'} ? ' status-red' : ' status-green'))"
+                                      th:text="${#strings.replace(h.claimStatus.name(),'_',' ')}">pending</span>
+                            </td>
+                            <td th:text="${#strings.replace(h.resolution.name(),'_',' ')}">pending</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/warranty/rmas/{id}(id=${h.claimId})}">View</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${history == null or #lists.isEmpty(history)}" class="empty-state py-4">
+                    <h3>No claim history</h3>
+                    <p>This serial has no previous RMA claims.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div th:if="${lookup.eligible}" class="form-card bg-light-subtle">
+                    <h3 class="section-title mb-2">Create RMA Claim</h3>
+                    <p class="section-subtitle mb-3">Opening a claim does not change product stock. It marks this already-sold unit as reported defective while the claim is reviewed.</p>
+                    <form method="post" th:action="@{/warranty/claims}">
+                        <input type="hidden" name="serialValue" th:value="${lookup.serial.serialValue}"/>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="faultDescription">Fault Description</label>
+                            <textarea id="faultDescription"
+                                      class="form-control"
+                                      name="faultDescription"
+                                      maxlength="255"
+                                      placeholder="Describe the reported fault"
+                                      required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="conditionNotes">Physical Condition / Notes</label>
+                            <textarea id="conditionNotes"
+                                      class="form-control"
+                                      name="conditionNotes"
+                                      maxlength="255"
+                                      placeholder="Visible damage, accessories received, or other notes"></textarea>
+                        </div>
+
+                        <button class="btn btn-primary w-100" type="submit">Create Pending RMA</button>
+                    </form>
+                </div>
+
+                <div th:unless="${lookup.eligible}" class="empty-state py-4">
+                    <h3>Claim creation unavailable</h3>
+                    <p th:text="${lookup.eligibilityMessage}">This serial is not eligible.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">RMA Claims</h2>
+                <p class="section-subtitle">Claim status and resolution are kept separate so approved claims can wait safely for a final outcome.</p>
+            </div>
+            <form method="get" th:action="@{/warranty}" class="d-flex gap-2 align-items-end">
+                <div>
+                    <label class="form-label" for="statusFilter">Status</label>
+                    <select id="statusFilter" class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+                        <option value="" th:selected="${selectedStatus == null}">All</option>
+                        <option value="pending" th:selected="${selectedStatus != null and selectedStatus.name() == 'pending'}">Pending</option>
+                        <option value="approved" th:selected="${selectedStatus != null and selectedStatus.name() == 'approved'}">Approved</option>
+                        <option value="rejected" th:selected="${selectedStatus != null and selectedStatus.name() == 'rejected'}">Rejected</option>
+                        <option value="closed" th:selected="${selectedStatus != null and selectedStatus.name() == 'closed'}">Closed</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(claims)}">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>RMA</th>
+                    <th>Serial</th>
+                    <th>Product</th>
+                    <th>Opened</th>
+                    <th>Status</th>
+                    <th>Resolution</th>
+                    <th>Processed By</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${claims}">
+                    <td><span class="code-chip" th:text="${c.claimCode}">RMA-000001</span></td>
+                    <td th:text="${c.serial.serialValue}">SERIAL</td>
+                    <td class="fw-semibold" th:text="${c.serial.product.name}">Product</td>
+                    <td th:text="${c.createdAt != null ? #temporals.format(c.createdAt,'yyyy-MM-dd HH:mm') : c.claimDate}">date</td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${c.claimStatus.name() == 'pending'} ? ' status-amber' : (${c.claimStatus.name() == 'approved'} ? ' status-blue' : (${c.claimStatus.name() == 'rejected'} ? ' status-red' : ' status-green'))"
+                              th:text="${#strings.replace(c.claimStatus.name(),'_',' ')}">pending</span>
+                    </td>
+                    <td th:text="${#strings.replace(c.resolution.name(),'_',' ')}">pending</td>
+                    <td th:text="${c.processedBy.name}">Staff</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{/warranty/rmas/{id}(id=${c.claimId})}">Manage</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(claims)}">
+            <h3>No RMA claims found</h3>
+            <p>No claims match the selected status.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

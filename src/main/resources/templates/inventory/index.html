@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Inventory', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Function 1 • Warehouse Operations</div>
+            <h1 class="page-title">Inventory & Picking</h1>
+            <p class="page-subtitle">Monitor stock, locate products and process QR-backed warehouse pick tickets.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/inventory/products}">Product Inventory</a>
+            <a class="btn btn-light" th:href="@{/inventory/locations}">Storage Locations</a>
+            <a class="btn btn-primary" th:href="@{/inventory/pick-tickets}">Open Pick Queue</a>
+        </div>
+    </header>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--inventory" aria-labelledby="inventory-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Live inventory snapshot</div>
+            <h2 id="inventory-orbit-title" class="kpi-orbit-title">Inventory Core</h2>
+            <p>Stock health, warehouse work and mapped storage summarized in one live visual.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Warehouse data connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--inventory" data-kpi-orbit aria-label="Inventory live KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></span>
+                <strong>Stock</strong><small>Inventory live</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a"><strong class="kpi-orbit__value" th:text="${totalProducts}">0</strong><span>Total Products</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b kpi-orbit__metric--alert"><strong class="kpi-orbit__value" th:text="${lowStockCount}">0</strong><span>Low Stock</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${pendingCount}">0</strong><span>Pending Picks</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d"><strong class="kpi-orbit__value" th:text="${locationCount}">0</strong><span>Locations</span></div>
+
+            <div class="kpi-orbit__metric kpi-orbit__metric--secondary kpi-orbit__metric--e kpi-orbit__metric--danger"><strong class="kpi-orbit__value" th:text="${outOfStockCount}">0</strong><span>Out of Stock</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--secondary kpi-orbit__metric--f kpi-orbit__metric--purple"><strong class="kpi-orbit__value" th:text="${serialTrackedCount}">0</strong><span>Serial Tracked</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--secondary kpi-orbit__metric--g kpi-orbit__metric--alert"><strong class="kpi-orbit__value" th:text="${partialCount}">0</strong><span>Partial Picks</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--secondary kpi-orbit__metric--h kpi-orbit__metric--success"><strong class="kpi-orbit__value" th:text="${completedToday}">0</strong><span>Processed Today</span></div>
+
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Inventory live</strong><small>Stock and picking workspace</small></span></div>
+        </div>
+    </section>
+
+
+    <section class="table-card mb-4">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Low Stock Products</h2>
+                <p class="section-subtitle">Uses each product's configurable reorder level instead of a hard-coded threshold.</p>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/inventory/products}">View Full Inventory</a>
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(lowStock)}">
+            <table class="table align-middle">
+                <thead><tr><th>Product</th><th>Stock</th><th>Reorder Level</th><th>Location</th><th>Urgency</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${lowStock}">
+                    <td><div class="fw-bold" th:text="${p.name}">Product</div><div class="text-muted small" th:text="${p.productCode}">CODE</div></td>
+                    <td><span class="stock-value stock-low" th:text="${p.stockCount}">0</span></td>
+                    <td th:text="${p.reorderLevel}">5</td>
+                    <td><span class="location-chip" th:text="${p.location != null ? p.location.locationCode : 'Unassigned'}">A1-S1-B1</span></td>
+                    <td><span class="status status-blue" th:text="${p.urgencyScore != null ? p.urgencyScore : 0}">0</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(lowStock)}">
+            <h3>No low-stock products</h3>
+            <p>Every in-stock product is currently above its reorder level.</p>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Recent Pick Outcomes</h2>
+                <p class="section-subtitle">Latest completed, partial and exception pick tickets.</p>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/inventory/pick-tickets/scan}">Scan / Find Ticket</a>
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(recentCompleted)}">
+            <table class="table align-middle">
+                <thead><tr><th>Ticket</th><th>Sale</th><th>Outcome</th><th>Operator</th><th>Completed</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="t : ${recentCompleted}">
+                    <td><span class="code-chip" th:text="${t.ticketCode}">PICK-000001</span></td>
+                    <td th:text="${t.sale.saleCode}">SALE-000001</td>
+                    <td><span class="status"
+                              th:classappend="${t.status.name() == 'completed'} ? ' status-green' : (${t.status.name() == 'partially_completed'} ? ' status-purple' : ' status-red')"
+                              th:text="${#strings.replace(t.status.name(),'_',' ')}">completed</span></td>
+                    <td th:text="${t.fulfilledBy != null ? t.fulfilledBy.name : '—'}">—</td>
+                    <td th:text="${t.fulfilledAt != null ? #temporals.format(t.fulfilledAt,'yyyy-MM-dd HH:mm') : '—'}">—</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" th:href="@{/inventory/pick-tickets/{id}(id=${t.ticketId})}">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(recentCompleted)}">
+            <h3>No processed tickets yet</h3><p>Completed warehouse activity will appear here.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

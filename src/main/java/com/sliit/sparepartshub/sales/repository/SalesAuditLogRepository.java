@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.sales.repository; import com.sliit.sparepartshub.entity.AuditLog;import org.springframework.data.jpa.repository.JpaRepository; public interface SalesAuditLogRepository extends JpaRepository<AuditLog,Integer>{}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Storage Location', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Inventory • Storage Map</div>
+            <h1 class="page-title" th:text="${editing ? 'Edit Storage Location' : 'Add Storage Location'}">Add Storage Location</h1>
+            <p class="page-subtitle">Maintain a unique location code and its physical aisle, shelf and bin.</p>
+        </div>
+        <div class="page-actions"><a class="btn btn-light" th:href="@{/inventory/locations}">Cancel</a></div>
+    </header>
+
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="form-card">
+        <form method="post" th:object="${form}"
+              th:action="${editing} ? @{/inventory/locations/{id}(id=${location.locationId})} : @{/inventory/locations}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="locationCode">Location Code</label>
+                    <input id="locationCode" class="form-control" th:field="*{locationCode}" maxlength="20" placeholder="A1-S1-B1" required/>
+                    <div class="form-text">Must be unique. It is also the value encoded in the location QR.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="aisle">Aisle</label>
+                    <input id="aisle" class="form-control" th:field="*{aisle}" maxlength="30" placeholder="A1" required/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="shelf">Shelf</label>
+                    <input id="shelf" class="form-control" th:field="*{shelf}" maxlength="30" placeholder="S1" required/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="bin">Bin</label>
+                    <input id="bin" class="form-control" th:field="*{bin}" maxlength="30" placeholder="B1" required/>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a class="btn btn-light" th:href="@{/inventory/locations}">Cancel</a>
+                <button class="btn btn-primary" type="submit" th:text="${editing ? 'Save Changes' : 'Create Location'}">Create Location</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

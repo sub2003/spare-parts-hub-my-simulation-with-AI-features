@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Stock Requests', content=~{::main})}">
+<body>
+<main class="page-wrap module-urgency">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Demand Tracking</div>
+            <h1 class="page-title">Customer Stock Requests</h1>
+            <p class="page-subtitle">
+                Record customer demand and move it through Pending → Ready to Notify → Notified → Fulfilled.
+            </p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/stockmonitoring}">Back to Urgency</a>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="kpi-orbit-panel kpi-orbit-panel--requests" aria-labelledby="requests-orbit-title">
+        <div class="kpi-orbit-panel__copy">
+            <div class="kpi-orbit-kicker">Customer demand queue</div>
+            <h2 id="requests-orbit-title" class="kpi-orbit-title">Request Flow</h2>
+            <p>Pending demand and ready-to-notify customers are summarized before you work the request queue.</p>
+            <div class="kpi-orbit-caption"><span class="kpi-orbit-live-dot"></span> Demand queue connected</div>
+        </div>
+        <div class="kpi-orbit kpi-orbit--requests" data-kpi-orbit aria-label="Stock request KPI orbit">
+            <div class="kpi-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="kpi-orbit__core">
+                <span class="kpi-orbit__core-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+                <strong>Queue</strong><small>Demand flow</small>
+            </div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--a kpi-orbit__metric--alert"><strong class="kpi-orbit__value" th:text="${pendingCount}">0</strong><span>Waiting for Stock</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--b"><strong class="kpi-orbit__value" th:text="${readyCount}">0</strong><span>Ready to Notify</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--c"><strong class="kpi-orbit__value" th:text="${#lists.size(requests)}">0</strong><span>Visible Requests</span></div>
+            <div class="kpi-orbit__metric kpi-orbit__metric--d"><strong class="kpi-orbit__value" th:text="${#lists.size(products)}">0</strong><span>Requestable Products</span></div>
+            <div class="kpi-orbit__status"><span class="kpi-orbit-live-dot"></span><span><strong>Queue live</strong><small>Customer demand tracking</small></span></div>
+        </div>
+    </section>
+
+    <section class="form-card mb-4" style="max-width:none">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Log New Request</h2>
+                <p class="section-subtitle">Capture the requested product, quantity and at least one contact method.</p>
+            </div>
+        </div>
+
+        <form method="post" th:action="@{/stockmonitoring/stock-requests}" class="row g-3">
+            <div class="col-12 col-lg-4">
+                <label class="form-label" for="productId">Product</label>
+                <select id="productId" class="form-select" name="productId" required>
+                    <option value="" disabled selected>Select product</option>
+                    <option th:each="p : ${products}"
+                            th:value="${p.productId}"
+                            th:text="|${p.productCode} — ${p.name} (Stock: ${p.stockCount})|">Product</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <label class="form-label" for="requestedQuantity">Quantity</label>
+                <input id="requestedQuantity"
+                       class="form-control"
+                       type="number"
+                       name="requestedQuantity"
+                       min="1"
+                       value="1"
+                       required/>
+            </div>
+
+            <div class="col-12 col-lg-3">
+                <label class="form-label" for="customerName">Customer Name</label>
+                <input id="customerName" class="form-control" name="customerName" maxlength="50" placeholder="Customer name" required/>
+            </div>
+
+            <div class="col-12 col-lg-3">
+                <label class="form-label" for="customerEmail">Email</label>
+                <input id="customerEmail" class="form-control" type="email" name="customerEmail" maxlength="254" placeholder="customer@example.com"/>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <label class="form-label" for="customerPhone">Phone</label>
+                <input id="customerPhone" class="form-control" name="customerPhonenum" maxlength="20" placeholder="Phone number"/>
+                <div class="form-text">Provide email, phone, or both.</div>
+            </div>
+
+            <div class="col-12 col-lg-8 d-flex align-items-end justify-content-end">
+                <button class="btn btn-primary" type="submit">Log Stock Request</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Request Queue</h2>
+                <p class="section-subtitle">Stock arrival makes eligible Pending requests Ready to Notify; it never pretends the customer was contacted automatically.</p>
+            </div>
+            <span class="status status-blue" th:text="${#lists.size(requests) + ' requests'}">0 requests</span>
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(requests)}">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Customer</th>
+                    <th>Contact</th>
+                    <th>Requested</th>
+                    <th>Status</th>
+                    <th>Next Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${requests}">
+                    <td>
+                        <div class="fw-semibold" th:text="${r.product.name}">Product</div>
+                        <small class="text-muted" th:text="${r.product.productCode}">CODE</small>
+                    </td>
+                    <td th:text="${r.requestedQuantity}">1</td>
+                    <td th:text="${r.customerName}">Customer</td>
+                    <td>
+                        <div th:text="${r.customerEmail != null and !r.customerEmail.isBlank() ? r.customerEmail : 'No email'}">Email</div>
+                        <small class="text-muted"
+                               th:text="${r.customerPhonenum != null and !r.customerPhonenum.isBlank() ? r.customerPhonenum : 'No phone'}">Phone</small>
+                    </td>
+                    <td th:text="${r.requestedAt != null ? #temporals.format(r.requestedAt,'yyyy-MM-dd HH:mm') : '—'}">—</td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${r.status.name() == 'fulfilled'} ? ' status-green' :
+                                              (${r.status.name() == 'notified'} ? ' status-blue' :
+                                              (${r.status.name() == 'ready_to_notify'} ? ' status-purple' : ' status-amber'))"
+                              th:text="${#strings.replace(r.status.name(),'_',' ')}">pending</span>
+                    </td>
+                    <td>
+                        <span th:if="${r.status.name() == 'pending'}" class="small text-muted">
+                            Waiting for enough stock.
+                        </span>
+
+                        <form th:if="${r.status.name() == 'ready_to_notify'}"
+                              method="post"
+                              th:action="@{/stockmonitoring/stock-requests/{id}/status(id=${r.requestId})}">
+                            <input type="hidden" name="status" value="notified"/>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Mark Notified</button>
+                        </form>
+
+                        <form th:if="${r.status.name() == 'notified'}"
+                              method="post"
+                              th:action="@{/stockmonitoring/stock-requests/{id}/status(id=${r.requestId})}">
+                            <input type="hidden" name="status" value="fulfilled"/>
+                            <button class="btn btn-sm btn-outline-success" type="submit">Mark Fulfilled</button>
+                            <div class="small text-muted mt-1"
+                                 th:if="${r.notifiedAt != null}"
+                                 th:text="|Notified ${#temporals.format(r.notifiedAt,'yyyy-MM-dd HH:mm')}|">Notified</div>
+                        </form>
+
+                        <span th:if="${r.status.name() == 'fulfilled'}" class="small text-muted">Complete</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(requests)}">
+            <h3>No stock requests</h3>
+            <p>Customer demand will appear here after a request is logged.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

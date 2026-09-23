@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Staff Accounts', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Function 6 • PBI-20</div>
+            <h1 class="page-title">Staff Accounts & Roles</h1>
+            <p class="page-subtitle">Create staff accounts, control role-based access and disable accounts without exposing password hashes.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/reporting}">Reports & Audit</a>
+            <a class="btn btn-primary" th:href="@{/reporting/staff/new}">Create Staff Account</a>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Internal staff</h2>
+                <p class="section-subtitle">The last active Admin cannot be deactivated, changed to another role or deleted. Accounts with business history must be deactivated instead.</p>
+            </div>
+            <span class="status status-blue" th:text="|${#lists.size(staff)} accounts|">0 accounts</span>
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(staff)}">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Staff Member</th>
+                    <th>Code</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${staff}">
+                    <td>
+                        <div class="fw-bold" th:text="${u.name}">Staff Name</div>
+                        <div class="small text-muted" th:text="${u.email}">staff@example.com</div>
+                    </td>
+                    <td><span class="code-chip" th:text="${u.userCode != null ? u.userCode : '—'}">ADM001</span></td>
+                    <td>
+                        <span class="status status-blue text-capitalize"
+                              th:text="${#strings.replace(u.role.name(),'_',' ')}">admin</span>
+                    </td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${u.active} ? ' status-green' : ' status-red'"
+                              th:text="${u.active ? 'Active' : 'Inactive'}">Active</span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                            <a class="btn btn-sm btn-outline-primary"
+                               th:href="@{/reporting/staff/{id}/edit(id=${u.userId})}">Edit</a>
+                            <form method="post" th:action="@{/reporting/staff/{id}/active(id=${u.userId})}">
+                                <input type="hidden" name="active" th:value="${!u.active}"/>
+                                <button class="btn btn-sm"
+                                        th:classappend="${u.active} ? ' btn-outline-danger' : ' btn-outline-success'"
+                                        type="submit"
+                                        th:text="${u.active ? 'Deactivate' : 'Activate'}">Deactivate</button>
+                            </form>
+                            <form method="post"
+                                  th:if="${u.userId != currentUserId and !(u.active and u.role.name() == 'admin' and activeAdminCount <= 1)}"
+                                  th:action="@{/reporting/staff/{id}/delete(id=${u.userId})}"
+                                  th:attr="data-confirm=|Permanently delete ${u.name} (${u.userCode != null ? u.userCode : 'no code'})? This is allowed only when no business history exists.|"
+                                  data-confirm-title="Delete staff account"
+                                  data-confirm-button="Delete Account"
+                                  data-confirm-tone="danger">
+                                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(staff)}">
+            <h3>No staff accounts found</h3>
+            <p>Create the first staff account to begin role-based access management.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

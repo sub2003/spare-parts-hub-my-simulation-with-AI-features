@@ -1,0 +1,1 @@
+package com.sliit.sparepartshub.reporting.repository;import com.sliit.sparepartshub.entity.Product;import org.springframework.data.jpa.repository.JpaRepository;public interface ReportingProductRepository extends JpaRepository<Product,Integer>{long countByUrgencyScoreGreaterThanEqual(java.math.BigDecimal score);}

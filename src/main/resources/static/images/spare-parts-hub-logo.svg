@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 282 58" role="img" aria-labelledby="title desc">
+  <title id="title">Spare Parts Hub</title>
+  <desc id="desc">Spare Parts Hub logo with a computer chip, inventory box, and procurement mark.</desc>
+  <defs>
+    <linearGradient id="chip" x1="5" y1="5" x2="53" y2="53" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(1 1)">
+    <rect x="8" y="8" width="42" height="42" rx="12" fill="url(#chip)"/>
+    <g fill="#BFDBFE">
+      <rect x="0" y="15" width="10" height="4" rx="2"/><rect x="0" y="27" width="10" height="4" rx="2"/><rect x="0" y="39" width="10" height="4" rx="2"/>
+      <rect x="48" y="15" width="10" height="4" rx="2"/><rect x="48" y="27" width="10" height="4" rx="2"/><rect x="48" y="39" width="10" height="4" rx="2"/>
+      <rect x="15" y="0" width="4" height="10" rx="2"/><rect x="27" y="0" width="4" height="10" rx="2"/><rect x="39" y="0" width="4" height="10" rx="2"/>
+      <rect x="15" y="48" width="4" height="10" rx="2"/><rect x="27" y="48" width="4" height="10" rx="2"/><rect x="39" y="48" width="4" height="10" rx="2"/>
+    </g>
+    <path d="M21 22.5 29 18l8 4.5v9L29 36l-8-4.5v-9Z" fill="#fff"/>
+    <path d="m21 22.5 8 4.5 8-4.5M29 27v9" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="41.5" cy="40.5" r="7.5" fill="#DBEAFE" stroke="#fff" stroke-width="2"/>
+    <path d="M41.5 36.8v7.4M37.8 40.5h7.4" stroke="#1D4ED8" stroke-width="2.1" stroke-linecap="round"/>
+  </g>
+  <text x="70" y="27" fill="#172033" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="750">Spare Parts Hub</text>
+  <text x="70" y="45" fill="#64748B" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="10.8" font-weight="500" letter-spacing=".25">COMPUTER PARTS MANAGEMENT</text>
+</svg>

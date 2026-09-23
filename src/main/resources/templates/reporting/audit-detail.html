@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Reports', content=~{::main})}">
+<body>
+<main class="page-wrap module-reporting">
+    <header class="page-head">
+        <div><div class="eyebrow">Reporting • Audit Detail</div><h1 class="page-title" th:text="${detail.audit.actionType}">Audit Event</h1><p class="page-subtitle">Immutable event details with a separate persistent review record.</p></div>
+        <div class="page-actions"><a class="btn btn-light" th:href="@{/reporting/audit}">Back to Audit</a></div>
+    </header>
+
+    <div class="alert alert-success" th:if="${success}" th:text="${success}">Success</div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+            <section class="panel h-100">
+                <div class="section-header"><div><h2 class="section-title">Event</h2><p class="section-subtitle" th:text="${'Log #' + detail.audit.logId}">Log</p></div></div>
+                <dl class="row audit-kv mb-0">
+                    <dt class="col-sm-4">Timestamp</dt><dd class="col-sm-8" th:text="${#temporals.format(detail.audit.loggedAt,'yyyy-MM-dd HH:mm:ss')}">time</dd>
+                    <dt class="col-sm-4">Actor</dt><dd class="col-sm-8" th:text="${detail.audit.user != null ? detail.audit.user.name + ' (' + detail.audit.user.userCode + ')' : 'System'}">actor</dd>
+                    <dt class="col-sm-4">Action</dt><dd class="col-sm-8"><span class="status status-blue" th:text="${detail.audit.actionType}">ACTION</span></dd>
+                    <dt class="col-sm-4">Entity / Table</dt><dd class="col-sm-8" th:text="${detail.audit.tableName}">table</dd>
+                    <dt class="col-sm-4">Record ID</dt><dd class="col-sm-8" th:text="${detail.audit.recordId}">1</dd>
+                </dl>
+            </section>
+        </div>
+        <div class="col-lg-5">
+            <section class="panel h-100">
+                <div class="section-header"><div><h2 class="section-title">Review State</h2><p class="section-subtitle">Stored separately from AuditLog.</p></div></div>
+                <div th:if="${detail.review == null}" class="mb-3"><span class="status status-pending">unreviewed</span></div>
+                <div th:if="${detail.review != null}" class="mb-3">
+                    <span class="status status-green" th:text="${detail.review.reviewStatus}">reviewed</span>
+                    <div class="small text-muted mt-2" th:text="${'Reviewed by ' + detail.review.reviewedBy.name + ' • ' + #temporals.format(detail.review.reviewedAt,'yyyy-MM-dd HH:mm')}">review</div>
+                    <p class="mt-2 mb-0" th:if="${detail.review.reviewNote != null}" th:text="${detail.review.reviewNote}">note</p>
+                </div>
+
+                <form method="post" th:action="@{/reporting/audit/{id}/review(id=${detail.audit.logId})}" class="row g-2">
+                    <div class="col-12"><label class="form-label" for="status">Review Decision</label><select id="status" class="form-select" name="status" required><option th:each="s : ${reviewStatuses}" th:value="${s}" th:text="${s}">reviewed</option></select></div>
+                    <div class="col-12"><label class="form-label" for="note">Review Note</label><textarea id="note" class="form-control" rows="3" maxlength="500" name="note" th:text="${detail.review != null ? detail.review.reviewNote : ''}" placeholder="Required for Action Required"></textarea></div>
+                    <div class="col-12"><button class="btn btn-primary" type="submit">Save Review</button></div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6"><section class="panel h-100"><h2 class="section-title mb-3">Old Value</h2><pre class="audit-json" th:text="${detail.oldValue}">No value recorded.</pre></section></div>
+        <div class="col-lg-6"><section class="panel h-100"><h2 class="section-title mb-3">New Value</h2><pre class="audit-json" th:text="${detail.newValue}">No value recorded.</pre></section></div>
+    </div>
+</main>
+</body>
+</html>

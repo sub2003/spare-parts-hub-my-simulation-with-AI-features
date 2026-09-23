@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Manage Supplier Products', content=~{::main})}">
+<body>
+<main class="supplier-page module-supplier">
+    <th:block th:replace="~{supplier/_fragments :: assets}"></th:block>
+    <th:block th:replace="~{supplier/_fragments :: alerts}"></th:block>
+
+    <header class="page-header">
+        <div>
+            <div class="page-kicker">Supplier Management</div>
+            <h1 class="page-title">Manage Products</h1>
+            <p class="page-subtitle mb-0">
+                Link existing inventory products to <strong th:text="${supplier.name}">Supplier</strong>
+                and define the price, MOQ and lead time used by procurement and the Supplier Portal.
+            </p>
+        </div>
+        <a class="btn btn-outline-primary header-action no-print" th:href="@{/supplier/records}">Back to Suppliers</a>
+    </header>
+
+    <th:block th:replace="~{supplier/_fragments :: subnav('suppliers')}"></th:block>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="panel-card h-100">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                    <div>
+                        <div class="page-kicker">Supplier Account</div>
+                        <h2 class="h5 fw-bold mb-1" th:text="${supplier.name}">Supplier Name</h2>
+                        <div class="text-muted small">
+                            <span class="code-chip" th:text="${supplier.supplierCode != null ? supplier.supplierCode : 'No code'}">SUP001</span>
+                            <span class="mx-1">•</span>
+                            <span th:text="${supplier.email}">supplier@example.com</span>
+                        </div>
+                    </div>
+                    <span th:class="${supplier.active ? 'status-pill status-approved' : 'status-pill status-rejected'}"
+                          th:text="${supplier.active ? 'Active' : 'Inactive'}">Active</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel-card h-100 supplier-products-summary">
+                <div class="text-muted small fw-semibold">Products currently linked</div>
+                <div class="supplier-products-count" th:text="${linkedProductCount}">0</div>
+                <div class="text-muted small">Only linked products appear in this supplier's restock-offer dropdown.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-box mb-3">
+        Partnership approval and product linking are separate steps. Approving a supplier does not automatically give that supplier every inventory product. Select only products this supplier actually provides and enter the supplier-specific commercial terms from the catalog or agreement.
+    </div>
+
+    <div class="alert alert-warning" th:if="${!supplier.active}">
+        This supplier is inactive. Activate the supplier from Supplier Records before saving product assignments.
+    </div>
+
+    <form th:action="@{/supplier/records/{id}/products(id=${supplier.supplierId})}"
+          method="post"
+          th:object="${form}"
+          id="supplierProductsForm">
+
+        <div class="panel-card p-0 overflow-hidden" th:if="${form != null and !#lists.isEmpty(form.rows)}">
+            <div class="supplier-products-toolbar no-print">
+                <div>
+                    <h2 class="h6 fw-bold mb-1">Available Inventory Products</h2>
+                    <p class="text-muted small mb-0">Tick a product to configure its supplier terms. Unticking an existing product removes only this supplier-product relationship.</p>
+                </div>
+                <div class="search-box">
+                    <input class="form-control" type="search" placeholder="Search products..."
+                           data-table-search="supplierProductsTable" aria-label="Search products"/>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-modern align-middle mb-0" id="supplierProductsTable">
+                    <thead>
+                    <tr>
+                        <th style="width: 8rem;">Supplies</th>
+                        <th>Product</th>
+                        <th style="width: 12rem;">Supply Price (LKR)</th>
+                        <th style="width: 8rem;">MOQ</th>
+                        <th style="width: 10rem;">Lead Time</th>
+                        <th class="text-end no-print" style="width: 7rem;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row, stat : *{rows}"
+                        class="supplier-product-row"
+                        data-search-row>
+                        <td>
+                            <input type="hidden" th:field="*{rows[__${stat.index}__].productId}"/>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input supplier-product-toggle"
+                                       type="checkbox"
+                                       th:field="*{rows[__${stat.index}__].selected}"
+                                       th:id="${'productSelected-' + stat.index}"/>
+                                <label class="form-check-label small fw-semibold"
+                                       th:for="${'productSelected-' + stat.index}">
+                                    Link
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold" th:text="${row.productName}">Product Name</div>
+                            <div class="text-muted small">
+                                <span th:text="${row.brand}">Brand</span>
+                                <span class="mx-1">•</span>
+                                <span th:text="${row.category}">Category</span>
+                                <span class="mx-1">•</span>
+                                <span th:text="${row.productCode != null ? row.productCode : 'No code'}">CODE</span>
+                            </div>
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm supplier-term-input"
+                                   th:errorclass="is-invalid"
+                                   type="number"
+                                   min="0.01"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   placeholder="0.00"
+                                   th:field="*{rows[__${stat.index}__].price}"/>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('rows[' + stat.index + '].price')}"
+                                 th:errors="*{rows[__${stat.index}__].price}"></div>
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm supplier-term-input"
+                                   th:errorclass="is-invalid"
+                                   type="number"
+                                   min="1"
+                                   step="1"
+                                   inputmode="numeric"
+                                   placeholder="1"
+                                   th:field="*{rows[__${stat.index}__].moq}"/>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('rows[' + stat.index + '].moq')}"
+                                 th:errors="*{rows[__${stat.index}__].moq}"></div>
+                        </td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <input class="form-control supplier-term-input"
+                                       th:errorclass="is-invalid"
+                                       type="number"
+                                       min="0"
+                                       step="1"
+                                       inputmode="numeric"
+                                       placeholder="0"
+                                       th:field="*{rows[__${stat.index}__].leadTimeDays}"/>
+                                <span class="input-group-text">days</span>
+                                <div class="invalid-feedback"
+                                     th:if="${#fields.hasErrors('rows[' + stat.index + '].leadTimeDays')}"
+                                     th:errors="*{rows[__${stat.index}__].leadTimeDays}"></div>
+                            </div>
+                        </td>
+                        <td class="text-end no-print">
+                            <button th:if="${row.selected}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    type="submit"
+                                    formmethod="post"
+                                    th:formaction="@{/supplier/records/{supplierId}/products/{productId}/remove(supplierId=${supplier.supplierId},productId=${row.productId})}"
+                                    data-confirm="Remove this product from the supplier? This removes only the supplier-product link."
+                                    data-confirm-title="Remove supplier product"
+                                    data-confirm-tone="danger">
+                                Remove
+                            </button>
+                            <span th:unless="${row.selected}" class="text-muted small">Not linked</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel-card empty-state" th:if="${form == null or #lists.isEmpty(form.rows)}">
+            <h3 class="h6 text-dark">No products exist in Inventory</h3>
+            <p class="mb-0">Create inventory products first, then return here to link them to this supplier.</p>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 no-print"
+             th:if="${form != null and !#lists.isEmpty(form.rows)}">
+            <a class="btn btn-light border" th:href="@{/supplier/records}">Cancel</a>
+            <button class="btn btn-primary" type="submit" th:disabled="${!supplier.active}">
+                Save Supplier Products
+            </button>
+        </div>
+    </form>
+
+    <th:block th:replace="~{supplier/_fragments :: scripts}"></th:block>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.supplier-product-row').forEach(function (row) {
+                const toggle = row.querySelector('.supplier-product-toggle');
+                const inputs = row.querySelectorAll('.supplier-term-input');
+
+                function syncRow() {
+                    const enabled = toggle && toggle.checked;
+                    row.classList.toggle('supplier-product-row-disabled', !enabled);
+                    inputs.forEach(function (input) {
+                        input.disabled = !enabled;
+                    });
+                }
+
+                if (toggle) {
+                    toggle.addEventListener('change', syncRow);
+                    syncRow();
+                }
+            });
+        });
+    </script>
+</main>
+</body>
+</html>

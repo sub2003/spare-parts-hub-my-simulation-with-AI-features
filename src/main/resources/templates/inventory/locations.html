@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(title='Storage Locations', content=~{::main})}">
+<body>
+<main class="page-wrap module-inventory">
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Inventory • Storage Map</div>
+            <h1 class="page-title">Storage Locations</h1>
+            <p class="page-subtitle">Maintain aisle, shelf and bin locations, then map products to them.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-light" th:href="@{/inventory}">Back to Inventory</a>
+            <a class="btn btn-primary" th:href="@{/inventory/locations/new}">+ Add Location</a>
+        </div>
+    </header>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <section class="table-card mb-4">
+        <div class="table-card-header">
+            <div><h2 class="section-title">Warehouse Location Directory</h2><p class="section-subtitle">Each location has a QR code containing its location code.</p></div>
+            <span class="status status-blue" th:text="${#lists.size(locations) + ' locations'}">0 locations</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Code</th><th>Aisle</th><th>Shelf</th><th>Bin</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                <tr th:each="l : ${locations}">
+                    <td><span class="location-chip" th:text="${l.locationCode}">A1-S1-B1</span></td>
+                    <td th:text="${l.aisle}">A1</td><td th:text="${l.shelf}">S1</td><td th:text="${l.bin}">B1</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" target="_blank" th:href="@{/inventory/locations/{id}/qr(id=${l.locationId})}">QR</a>
+                        <a class="btn btn-sm btn-light" th:href="@{/inventory/locations/{id}/edit(id=${l.locationId})}">Edit</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(locations)}"><td colspan="5"><div class="empty-state py-4"><h3>No locations yet</h3><p>Create the first aisle, shelf and bin location.</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-card-header">
+            <div><h2 class="section-title">Product Location Assignments</h2><p class="section-subtitle">Assign each product to the exact location warehouse staff should visit.</p></div>
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/inventory/products}">Product Inventory</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Product</th><th>Current Location</th><th>Assign Location</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${products}">
+                    <td><div class="fw-bold" th:text="${p.name}">Product</div><div class="text-muted small" th:text="${p.productCode}">CODE</div></td>
+                    <td><span class="location-chip" th:text="${p.location != null ? p.location.locationCode : 'Unassigned'}">Unassigned</span></td>
+                    <td>
+                        <form class="d-flex flex-column flex-lg-row gap-2" method="post" th:action="@{/inventory/locations/assign}">
+                            <input type="hidden" name="productId" th:value="${p.productId}"/>
+                            <select class="form-select" name="locationId" required>
+                                <option value="" disabled th:selected="${p.location == null}">Choose a location</option>
+                                <option th:each="l : ${locations}" th:value="${l.locationId}" th:selected="${p.location != null and p.location.locationId == l.locationId}"
+                                        th:text="${l.locationCode + ' — Aisle ' + l.aisle + ' / Shelf ' + l.shelf + ' / Bin ' + l.bin}">A1-S1-B1</option>
+                            </select>
+                            <button class="btn btn-outline-primary" type="submit">Save</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(products)}"><td colspan="3"><div class="empty-state py-4"><h3>No products found</h3><p>Products will appear here when inventory data is available.</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
