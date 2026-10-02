@@ -14,6 +14,12 @@
             </p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            <form th:if="${canDeletePendingClaim}" method="post"
+                  th:action="@{/warranty/rmas/{id}/delete(id=${claim.claimId})}"
+                  th:attr="data-confirm=${'Delete RMA ' + claim.claimCode + '? Use this only if the claim was created by mistake. The claim will be removed and the original serial will return to SOLD status.'}"
+                  onsubmit="return confirm(this.dataset.confirm)">
+                <button class="btn btn-outline-danger" type="submit">Delete Pending RMA</button>
+            </form>
             <a class="btn btn-outline-primary" th:href="@{/warranty(serial=${claim.serial.serialValue})}">Serial Lookup</a>
             <a class="btn btn-outline-secondary" th:href="@{/warranty}">All RMAs</a>
         </div>

@@ -58,6 +58,7 @@ public class WarrantyController {
         try {
             var claim = service.getClaim(id);
             model.addAttribute("claim", claim);
+            model.addAttribute("canDeletePendingClaim", service.canDeletePendingClaim(claim));
             model.addAttribute("history", service.history(claim.getSerial().getSerialId()));
             model.addAttribute("replacementOptions", service.replacementOptions(id));
             if (claim.getSerial().getSale() != null
@@ -99,6 +100,22 @@ public class WarrantyController {
             redirectAttributes.addAttribute("serial", serialValue);
             return "redirect:/warranty";
         }
+    }
+
+    @PostMapping("/rmas/{id}/delete")
+    public String delete(@PathVariable Integer id,
+                         @AuthenticationPrincipal CustomUserPrincipal principal,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            String code = service.deletePendingClaim(id, principal.getUser());
+            redirectAttributes.addFlashAttribute("success", "RMA " + code
+                    + " deleted. The original serial was restored to sold status.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", "RMA could not be deleted safely. No changes were made.");
+        }
+        return "redirect:/warranty";
     }
 
     @PostMapping("/rmas/{id}/approve")

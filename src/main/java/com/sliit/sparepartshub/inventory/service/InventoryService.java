@@ -266,6 +266,33 @@ public class InventoryService {
                 .orElseThrow(() -> new IllegalArgumentException("Storage location not found."));
     }
 
+    public Set<Integer> usedLocationIds() {
+        return new LinkedHashSet<>(products.findUsedLocationIds());
+    }
+
+    @Transactional
+    public String deleteLocation(Integer locationId, User actor) {
+        if (locationId == null || locationId <= 0) {
+            throw new IllegalArgumentException("Storage location not found.");
+        }
+        StorageLocation location = getLocation(locationId);
+        String code = location.getLocationCode();
+        if (products.existsByLocation_LocationId(locationId)) {
+            throw new IllegalArgumentException("Storage location " + code
+                    + " cannot be deleted because one or more products are assigned to it. Move or unassign those products first.");
+        }
+        String oldValue = locationJson(location);
+        try {
+            locations.delete(location);
+            locations.flush();
+        } catch (DataIntegrityViolationException ex) {
+            // Throw out of the transactional boundary: never commit after a failed flush.
+            throw new IllegalArgumentException("Storage location cannot be deleted because it is currently assigned to a product.", ex);
+        }
+        audit(actor, "LOCATION_DELETED", "storage_location", locationId, oldValue, null);
+        return code;
+    }
+
     public LocationForm locationForm(Integer id) {
         StorageLocation location = getLocation(id);
         LocationForm form = new LocationForm();

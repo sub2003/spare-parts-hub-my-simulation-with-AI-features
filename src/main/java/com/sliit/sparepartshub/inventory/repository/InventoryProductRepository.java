@@ -21,6 +21,11 @@ public interface InventoryProductRepository extends JpaRepository<Product, Integ
     @Query("select count(p) from Product p where p.stockCount > 0 and p.stockCount <= p.reorderLevel")
     long countLowStockProducts();
 
+    boolean existsByLocation_LocationId(Integer locationId);
+
+    @Query("select distinct p.location.locationId from Product p where p.location is not null")
+    List<Integer> findUsedLocationIds();
+
     long countByStockCount(Integer stockCount);
 
     long countBySerialTrackedTrue();

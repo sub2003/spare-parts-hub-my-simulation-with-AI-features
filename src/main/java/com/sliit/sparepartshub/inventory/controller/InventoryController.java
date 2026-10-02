@@ -233,7 +233,25 @@ public class InventoryController {
     public String locations(Model model) {
         model.addAttribute("products", service.products());
         model.addAttribute("locations", service.locations());
+        model.addAttribute("usedLocationIds", service.usedLocationIds());
         return "inventory/locations";
+    }
+
+    @PostMapping("/locations/{id}/delete")
+    public String deleteLocation(@PathVariable Integer id,
+                                 @AuthenticationPrincipal CustomUserPrincipal principal,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            String code = service.deleteLocation(id, principal.getUser());
+            redirectAttributes.addFlashAttribute("success", "Storage location " + code + " deleted successfully.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute("error", "Storage location cannot be deleted because it is currently assigned to a product.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", "Storage location could not be deleted safely. No changes were made.");
+        }
+        return "redirect:/inventory/locations";
     }
 
     @GetMapping("/locations/new")

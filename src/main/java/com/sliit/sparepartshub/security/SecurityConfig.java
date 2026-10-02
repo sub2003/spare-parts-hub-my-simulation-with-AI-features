@@ -84,6 +84,9 @@ public class SecurityConfig {
                                 "/inventory/products/*/reorder-level")
                         .hasAnyRole("WAREHOUSE_CLERK", "ADMIN")
 
+                        .requestMatchers(HttpMethod.POST, "/inventory/locations/*/delete")
+                        .hasAnyRole("WAREHOUSE_CLERK", "ADMIN")
+
                         // Function 1 - Inventory Storage Location Tracking
                         .requestMatchers("/inventory/**")
                         .hasAnyRole(

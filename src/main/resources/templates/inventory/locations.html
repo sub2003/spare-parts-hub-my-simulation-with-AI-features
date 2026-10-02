@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{fragments/layout :: page(title='Storage Locations', content=~{::main})}">
 <body>
 <main class="page-wrap module-inventory">
@@ -34,6 +35,15 @@
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-primary" target="_blank" th:href="@{/inventory/locations/{id}/qr(id=${l.locationId})}">QR</a>
                         <a class="btn btn-sm btn-light" th:href="@{/inventory/locations/{id}/edit(id=${l.locationId})}">Edit</a>
+                        <span sec:authorize="hasAnyRole('WAREHOUSE_CLERK','ADMIN')">
+                            <button th:if="${usedLocationIds.contains(l.locationId)}" class="btn btn-sm btn-outline-danger" type="button" disabled title="Move or unassign products first">In Use</button>
+                            <form th:unless="${usedLocationIds.contains(l.locationId)}" class="d-inline" method="post"
+                                  th:action="@{/inventory/locations/{id}/delete(id=${l.locationId})}"
+                                  th:attr="data-confirm=${'Delete storage location ' + l.locationCode + '? This action is only allowed when no products are assigned.'}"
+                                  onsubmit="return confirm(this.dataset.confirm)">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        </span>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(locations)}"><td colspan="5"><div class="empty-state py-4"><h3>No locations yet</h3><p>Create the first aisle, shelf and bin location.</p></div></td></tr>

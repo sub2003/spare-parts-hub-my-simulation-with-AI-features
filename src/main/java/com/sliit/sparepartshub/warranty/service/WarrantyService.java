@@ -156,6 +156,50 @@ public class WarrantyService {
         return claim;
     }
 
+    public boolean canDeletePendingClaim(RmaClaim claim) {
+        return claim.getClaimStatus() == RmaClaim.ClaimStatus.pending
+                && claim.getResolution() == RmaClaim.Resolution.pending
+                && claim.getReviewedBy() == null && claim.getResolvedBy() == null
+                && claim.getReplacementSerial() == null
+                && claim.getReviewedAt() == null && claim.getResolvedAt() == null
+                && claim.getClosedAt() == null
+                && claim.getRejectionReason() == null && claim.getResolutionNotes() == null;
+    }
+
+    @Transactional
+    public String deletePendingClaim(Integer claimId, User actor) {
+        if (claimId == null || claimId <= 0) {
+            throw new IllegalArgumentException("RMA claim not found.");
+        }
+        RmaClaim claim = lockedClaim(claimId);
+        if (!canDeletePendingClaim(claim)) {
+            throw new IllegalArgumentException("Only an unreviewed pending RMA created by mistake can be deleted.");
+        }
+        if (claim.getSerial() == null) {
+            throw new IllegalArgumentException("The original serial number no longer exists.");
+        }
+        SerialNumber original = serials.findByIdForUpdate(claim.getSerial().getSerialId())
+                .orElseThrow(() -> new IllegalArgumentException("The original serial number no longer exists."));
+        if (original.getSale() == null || original.getCurrentStatus() != SerialNumber.CurrentStatus.defective) {
+            throw new IllegalArgumentException("RMA could not be deleted safely. No changes were made.");
+        }
+        if (actor == null) {
+            throw new IllegalArgumentException("Authenticated staff user is required.");
+        }
+        String code = claim.getClaimCode();
+        String oldValue = "{\"claimCode\":" + jsonString(code)
+                + ",\"serial\":" + jsonString(original.getSerialValue())
+                + ",\"status\":\"pending\",\"resolution\":\"pending\",\"faultDescription\":"
+                + jsonString(claim.getFaultDescription()) + "}";
+        original.setCurrentStatus(SerialNumber.CurrentStatus.sold);
+        serials.save(original);
+        claims.delete(claim);
+        claims.flush();
+        audit(actor, "RMA_DELETED", claimId, oldValue,
+                "{\"deleted\":true,\"reason\":\"accidental_pending_claim\"}");
+        return code;
+    }
+
     @Transactional
     public RmaClaim approve(Integer claimId, User actor) {
         RmaClaim claim = lockedClaim(claimId);
