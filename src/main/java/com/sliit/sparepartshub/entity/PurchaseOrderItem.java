@@ -20,16 +20,41 @@ public class PurchaseOrderItem {
     private BigDecimal priceAgreed;
 
     public PurchaseOrderItem() {}
-    public Integer getPoItemId() { return poItemId; }
-    public void setPoItemId(Integer poItemId) { this.poItemId = poItemId; }
-    public PurchaseOrder getPurchaseOrder() { return purchaseOrder; }
-    public void setPurchaseOrder(PurchaseOrder purchaseOrder) { this.purchaseOrder = purchaseOrder; }
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
-    public Integer getQuantityOrdered() { return quantityOrdered; }
-    public void setQuantityOrdered(Integer quantityOrdered) { this.quantityOrdered = quantityOrdered; }
-    public Integer getReceivedQuantity() { return receivedQuantity == null ? 0 : receivedQuantity; }
-    public void setReceivedQuantity(Integer receivedQuantity) { this.receivedQuantity = receivedQuantity; }
-    public BigDecimal getPriceAgreed() { return priceAgreed; }
-    public void setPriceAgreed(BigDecimal priceAgreed) { this.priceAgreed = priceAgreed; }
+
+    public Integer getPoItemId() {
+        return poItemId;
+    }
+    public void setPoItemId(Integer poItemId) {
+        this.poItemId = poItemId;
+    }
+    public PurchaseOrder getPurchaseOrder() {
+        return purchaseOrder;
+    }
+    public void setPurchaseOrder(PurchaseOrder purchaseOrder) {
+        this.purchaseOrder = purchaseOrder;
+    }
+    public Product getProduct() {
+        return product;
+    }
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+    public Integer getQuantityOrdered() {
+        return quantityOrdered;
+    }
+    public void setQuantityOrdered(Integer quantityOrdered) {
+        this.quantityOrdered = quantityOrdered;
+    }
+    public Integer getReceivedQuantity() {
+        return receivedQuantity == null ? 0 : receivedQuantity;
+    }
+    public void setReceivedQuantity(Integer receivedQuantity) {
+        this.receivedQuantity = receivedQuantity;
+    }
+    public BigDecimal getPriceAgreed() {
+        return priceAgreed;
+    }
+    public void setPriceAgreed(BigDecimal priceAgreed) {
+        this.priceAgreed = priceAgreed;
+    }
 }
