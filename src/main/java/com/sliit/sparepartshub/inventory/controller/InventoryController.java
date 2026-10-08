@@ -55,8 +55,11 @@ public class InventoryController {
     }
 
     @GetMapping("/products")
-    public String products(Model model) {
-        model.addAttribute("rows", service.productRows());
+    public String products(@RequestParam(required = false) String q, Model model) {
+        String query = q == null ? "" : q.strip();
+        model.addAttribute("rows", service.productRows(query));
+        model.addAttribute("q", query);
+        model.addAttribute("totalProducts", service.totalProductCount());
         return "inventory/products";
     }
 

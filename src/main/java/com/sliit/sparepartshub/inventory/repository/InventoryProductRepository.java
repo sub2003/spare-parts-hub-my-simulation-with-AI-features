@@ -4,12 +4,28 @@ import com.sliit.sparepartshub.entity.Product;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
 public interface InventoryProductRepository extends JpaRepository<Product, Integer> {
     @EntityGraph(attributePaths = "location")
     List<Product> findAllByOrderByNameAsc();
+
+    @EntityGraph(attributePaths = "location")
+    @Query("""
+            select p from Product p left join p.location l
+            where lower(p.name) like :pattern escape '!'
+               or lower(p.productCode) like :pattern escape '!'
+               or lower(p.brand) like :pattern escape '!'
+               or lower(p.category) like :pattern escape '!'
+               or lower(l.locationCode) like :pattern escape '!'
+               or lower(l.aisle) like :pattern escape '!'
+               or lower(l.shelf) like :pattern escape '!'
+               or lower(l.bin) like :pattern escape '!'
+            order by p.name asc, p.productId asc
+            """)
+    List<Product> searchInventory(@Param("pattern") String pattern);
 
     @EntityGraph(attributePaths = "location")
     Optional<Product> findByProductId(Integer productId);

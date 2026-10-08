@@ -28,8 +28,26 @@
                 <h2 class="section-title">Current Inventory</h2>
                 <p class="section-subtitle">New products automatically become available to Supplier Management for explicit supplier-product linking.</p>
             </div>
-            <span class="status status-blue" th:text="${#lists.size(rows) + ' products'}">0 products</span>
+            <span class="status status-blue" th:text="${#strings.isEmpty(q) ? totalProducts + ' products' : #lists.size(rows) + ' of ' + totalProducts + ' products'}">0 products</span>
         </div>
+        <form class="inventory-search-toolbar" method="get" th:action="@{/inventory/products}" role="search">
+            <div class="inventory-search-field">
+                <label class="form-label" for="inventory-search">Search inventory</label>
+                <div class="search-input-wrap">
+                    <svg class="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>
+                    </svg>
+                    <input id="inventory-search" class="form-control" type="search" name="q" th:value="${q}"
+                           placeholder="Search by product, code, brand, category or location"
+                           aria-describedby="inventory-search-help"/>
+                </div>
+                <div id="inventory-search-help" class="small text-muted mt-1">Press Enter or select Search to update results.</div>
+            </div>
+            <div class="inventory-search-actions">
+                <button class="btn btn-primary" type="submit">Search</button>
+                <a class="btn btn-outline-primary" th:href="@{/inventory/products}">Clear</a>
+            </div>
+        </form>
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead>
@@ -97,10 +115,12 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(rows)}">
-                    <td colspan="9">
+                    <td th:colspan="${#authorization.expression('hasAnyRole(''ADMIN'',''WAREHOUSE_CLERK'')') ? 9 : 8}">
                         <div class="empty-state py-4">
-                            <h3>No products found</h3>
-                            <p>Create the first product to begin inventory management.</p>
+                            <h3 th:text="${totalProducts == 0 ? 'No products found' : 'No products match your search'}">No products found</h3>
+                            <p th:if="${totalProducts == 0}">Create the first product to begin inventory management.</p>
+                            <p th:unless="${totalProducts == 0}">Try another name, code, brand, category or location.</p>
+                            <a th:if="${totalProducts > 0}" class="btn btn-outline-primary" th:href="@{/inventory/products}">Clear search</a>
                         </div>
                     </td>
                 </tr>

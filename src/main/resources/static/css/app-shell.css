@@ -5365,3 +5365,18 @@ body.module-dashboard-body { --module-accent: 37,99,235; --module-accent-2: 34,2
     .ai-forecast-actions { display: none !important; }
     .ai-forecast-shell::before { display: none !important; }
 }
+
+/* Inventory product search: scoped to avoid changing other module toolbars. */
+.module-inventory .inventory-search-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e5ecf5;
+}
+.module-inventory .inventory-search-field { flex: 1; min-width: 0; }
+.module-inventory .inventory-search-actions { display: flex; gap: .5rem; }
+@media (max-width: 767.98px) {
+    .module-inventory .inventory-search-toolbar { flex-direction: column; align-items: stretch; }
+    .module-inventory .inventory-search-actions > * { flex: 1; }
+}

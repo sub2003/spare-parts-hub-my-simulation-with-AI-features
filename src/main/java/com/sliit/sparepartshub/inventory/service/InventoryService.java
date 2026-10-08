@@ -157,8 +157,18 @@ public class InventoryService {
     }
 
     public List<InventoryProductRow> productRows() {
+        return productRows(null);
+    }
+
+    public List<InventoryProductRow> productRows(String q) {
+        String query = q == null ? "" : q.strip();
+        // Escape LIKE metacharacters before adding our substring wildcards.
+        String pattern = "%" + query.toLowerCase(Locale.ROOT)
+                .replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        List<Product> matches = query.isEmpty()
+                ? products.findAllByOrderByNameAsc() : products.searchInventory(pattern);
         List<InventoryProductRow> rows = new ArrayList<>();
-        for (Product product : products.findAllByOrderByNameAsc()) {
+        for (Product product : matches) {
             long total = serials.countByProduct_ProductId(product.getProductId());
             long available = serials.countByProduct_ProductIdAndCurrentStatus(
                     product.getProductId(), SerialNumber.CurrentStatus.in_stock
